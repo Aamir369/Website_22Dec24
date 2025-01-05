@@ -5,7 +5,7 @@ import safety1 from '/public/video/ed5.jpg';
 import { Montserrat } from 'next/font/google';
 import Footer from "@/components/footer/footer";
 import React, { useState } from "react";
-/*import "@/css/globals.css";*/
+import "@/css/globals.css";
 
 const montserrat = Montserrat({
   subsets: ['latin'],
