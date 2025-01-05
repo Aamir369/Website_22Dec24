@@ -125,4 +125,6 @@ table {
 }
  
  
- 
+label.email-label {
+  color: white;
+}
