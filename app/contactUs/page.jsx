@@ -15,6 +15,22 @@ const montserrat = Montserrat({
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateName = (name) => /^[A-Za-z'-]+$/.test(name);
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhoneNumber = (phone) => {
+    // Regex pattern to allow US phone number in formats like: +1 (XXX) XXX-XXXX or +1-XXX-XXX-XXXX
+    const isValidFormat = /^\d{10}$/.test(phone.replace(/\D/g, ''));
+
+    // Remove non-digit characters (keeping only the digits) and check if the length is exactly 10
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    return isValidFormat && digitsOnly.length === 10;
+  };
+  
+
+
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -22,6 +38,32 @@ export default function Home() {
     setFormSuccess(false);
 
     const formData = new FormData(event.target);
+    const firstName = formData.get("name");
+    const lastName = formData.get("last_name");
+    const email = formData.get("email");
+
+    // Validation checks
+    const newErrors = {};
+    if (!validateName(firstName)) {
+      newErrors.name = "First name can only contain letters, hyphens, and apostrophes.";
+    }
+    if (!validateName(lastName)) {
+      newErrors.last_name = "Last name can only contain letters, hyphens, and apostrophes.";
+    }
+    if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (!validatePhoneNumber(formData.get("phone"))) {
+      newErrors.phone = "Please enter a valid US phone number (10 digits).";
+    }
+    
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      setIsSubmitting(false);
+      return; // Exit early if there are validation errors
+    }
     formData.append("access_key", "0f21d948-c2a8-4b94-9967-cd4de7beb731");
 
     const object = Object.fromEntries(formData);
@@ -39,9 +81,9 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success) {
-        console.log("Success:", data);
+       // console.log("Success:", data);
         event.target.reset(); // Reset form fields
-        setFormSuccess(true); // Set success state
+        //setFormSuccess(true); // Set success state
       } else {
         console.log("Error:", data);
       }
@@ -102,8 +144,17 @@ export default function Home() {
                     id="first_name"
                     placeholder="John"
                     required
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-md text-gray-900"
+                    pattern="[A-Za-z'-]+"
+                    className={`w-full px-3 py-2 border-2 rounded-md text-gray-900 ${errors.name ? "border-red-500" : "border-gray-200"}`}
+                    onKeyPress={(e) => {
+                      if (!/[A-Za-z'-]/.test(e.key)) {
+                        e.preventDefault(); // Block input if not a valid character
+                      }
+                    }}
+                    onInvalid={(e) => e.target.setCustomValidity("First name can only contain letters, hyphens, and apostrophes.")}
+                    onInput={(e) => e.target.setCustomValidity("")} // Clear custom error on input
                   />
+                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
                 <div className="w-full md:w-1/2">
                   <label htmlFor="lname" className="block mb-2 text-sm text-white">Last Name</label>
@@ -113,8 +164,16 @@ export default function Home() {
                     id="lname"
                     placeholder="Doe"
                     required
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-md text-gray-900"
+                    className={`w-full px-3 py-2 border-2 rounded-md text-gray-900 ${errors.last_name ? "border-red-500" : "border-gray-200"}`}
+                    onKeyPress={(e) => {
+                      if (!/[A-Za-z'-]/.test(e.key)) {
+                        e.preventDefault(); // Block input if not a valid character
+                      }
+                    }}
+                    onInvalid={(e) => e.target.setCustomValidity("First name can only contain letters, hyphens, and apostrophes.")}
+                    onInput={(e) => e.target.setCustomValidity("")} // Clear custom error on input
                   />
+                  {errors.last_name && <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>}
                 </div>
               </div>
 
@@ -127,8 +186,9 @@ export default function Home() {
                     id="email"
                     placeholder="you@company.com"
                     required
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-md text-gray-900"
+                    className={`w-full px-3 py-2 border-2 rounded-md text-gray-900 ${errors.email ? "border-red-500" : "border-gray-200"}`}
                   />
+                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
                 <div className="w-full md:w-1/2">
                   <label htmlFor="phone" className="block text-sm mb-2 text-white">Phone Number</label>
@@ -138,8 +198,13 @@ export default function Home() {
                     id="phone"
                     placeholder="+1 (587) 1234-567"
                     required
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-md text-gray-900"
+                    maxLength="10"
+                    pattern="\d{10}"
+                    className={`w-full px-3 py-2 border-2 rounded-md text-gray-900 ${errors.phone ? "border-red-500" : "border-gray-200"}`}
+                    
                   />
+                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+
                 </div>
               </div>
 
