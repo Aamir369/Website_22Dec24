@@ -112,6 +112,7 @@ export default function Home() {
               <p className="text-4xl">Aamir Baig Mughal</p>
               <p className="text-l">B.Appl Science (Engineering), M.B.A (Business Analytics), DMIT (CSD)</p>
               <p className="text-4xl py-2">Edmonton - Alberta</p>
+              <p className="text-2xl py-2">Email : aamir.mughal@kineticdataminds.ca</p>
               <div className="flex flex-col items-center text-3xl space-y-4 py-4">
                 <div className="inline-flex items-center">  
                 <div className="inline-flex items-center">
@@ -240,3 +241,4 @@ export default function Home() {
     </>
   );
 }
+

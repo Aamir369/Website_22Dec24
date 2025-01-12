@@ -128,3 +128,48 @@ table {
 label.email-label {
   color: white;
 }
+/* styles/globals.css */
+/* styles/globals.css */
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  body {
+      background-color: #e0e0e0; /* Example background for mobile */
+  }
+
+  h2 {
+      font-size: 2rem; /* Smaller headings for mobile */
+      text-align: center; /* Center align text for readability */
+  }
+
+  p {
+      font-size: 1rem; /* Adjust paragraph text size */
+      line-height: 1.5; /* Increase line spacing */
+  }
+
+  form {
+      width: 90%; /* Make the form fit better on small screens */
+      margin: 0 auto; /* Center form on the screen */
+      padding: 1rem;
+  }
+
+  .text-center {
+      padding: 1rem; /* Smaller padding for mobile */
+  }
+
+  .flex {
+      flex-direction: column; /* Ensure items stack vertically */
+      gap: 1rem; /* Add spacing between items */
+  }
+
+  button {
+      width: 100%; /* Buttons take full width for better UX */
+      padding: 0.75rem 1rem;
+  }
+}
+
+
+
+
+
+ 
