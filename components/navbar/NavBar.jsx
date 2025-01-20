@@ -28,7 +28,7 @@ function NavBar() {
 
         {/* Hamburger Menu Icon */}
         <button
-          className="md:hidden text-black focus:outline-none z-50"
+          className="md:hidden text-black focus:outline-none z-50 self-start"
           onClick={toggleMenu}
           aria-label="Toggle menu"
         >
@@ -69,7 +69,7 @@ function NavBar() {
         <ul
           className={`${
             isMenuOpen ? "block" : "hidden"
-          } md:flex md:space-x-6 absolute md:static top-16 left-0 w-full md:w-auto bg-slate-50 md:bg-transparent shadow-md md:shadow-none p-4 md:p-0`}
+          } md:flex md:space-x-6 absolute md:static top-0 left-0 w-full md:w-auto bg-slate-50 md:bg-transparent shadow-md md:shadow-none p-4 md:p-0`}
         >
           <li>
             <Link
