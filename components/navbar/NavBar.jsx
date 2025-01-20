@@ -18,7 +18,7 @@ function NavBar() {
         <Link href="/" className="flex-shrink-0">
           <Image
             src="/video/fulllogo_transparent.png"
-            width={150}
+            width={120}
             height={50}
             alt="Logo"
             className="h-auto w-auto"
