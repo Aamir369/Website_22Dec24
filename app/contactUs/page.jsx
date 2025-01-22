@@ -141,7 +141,7 @@ export default function Home() {
             {/* Contact Form */}
             <form
               onSubmit={onSubmit}
-              className="bg-red-800 bg-opacity-90 rounded-lg p-4 lg:p-8 shadow-lg w-full lg:max-w-lg mx-4 mt-8 lg:mt-36"
+              className="bg-red-800 bg-opacity-90 rounded-lg p-4 lg:p-8 shadow-lg w-full lg:max-w-lg mx-auto mt-8 lg:mt-36"
             >
               <h2 className="text-white text-lg lg:text-xl mb-1 font-medium title-font">
                 Contact Us
