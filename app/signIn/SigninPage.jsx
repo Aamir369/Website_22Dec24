@@ -9,7 +9,6 @@ import { Button } from "@/components/buttons/Button";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import "@/css/globals.css";
 
 export default function SigninPage() {
   const router = useRouter();
@@ -68,18 +67,18 @@ export default function SigninPage() {
   return (
     <form onSubmit={handleSubmit}>
       <FormControl className="flex flex-col">
-        <Label htmlFor="email" className="email-label" >Enter Registered Email Address</Label>
+        <Label htmlFor="email">Enter Email Address</Label>
         <Input
           type="email"
           id="email"
           name="email"
-          placeholder="jane_doe@gmail.com" 
-          required 
+          placeholder="jane_doe@gmail.com"
+          required
         />
       </FormControl>
 
       <FormControl className="flex flex-col">
-        <Label htmlFor="password" className="email-label">Enter Your Password</Label>
+        <Label htmlFor="password">Enter Your Password</Label>
         <Input
           type="password"
           id="password"
