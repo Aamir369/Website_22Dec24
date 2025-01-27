@@ -68,13 +68,13 @@ function NavBar() {
         {/* Navigation Links */}
         <ul
           className={`${
-            isMenuOpen ? "block" : "hidden"
-          } md:flex md:space-x-6 absolute md:static top-0 left-0 w-full md:w-auto bg-slate-50 md:bg-transparent shadow-md md:shadow-none p-4 md:p-0`}
+            isMenuOpen ? "flex" : "hidden"
+          } md:flex md:space-x-6 absolute md:static top-0 left-0 w-full md:w-auto bg-slate-50 md:bg-transparent shadow-md md:shadow-none p-4 md:p-0 flex-col md:flex-row items-center justify-center`}
         >
           <li>
             <Link
               href="/"
-              className="block md:inline-block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
+              className="block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
             >
               Home
             </Link>
@@ -82,7 +82,7 @@ function NavBar() {
           <li>
             <Link
               href="/signIn"
-              className="block md:inline-block text-black font-bold text-lg py-2 px-4 md:px-2 bg-slate-500 rounded-md md:rounded-none hover:bg-slate-400 transition"
+              className="flex items-center justify-center text-black font-bold text-lg py-2 px-4 md:px-2 bg-slate-500 rounded-md md:rounded-none hover:bg-slate-400 transition"
             >
               Registered Users SignIn
             </Link>
@@ -90,7 +90,7 @@ function NavBar() {
           <li>
             <Link
               href="/about"
-              className="block md:inline-block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
+              className="block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
             >
               About Us
             </Link>
@@ -98,7 +98,7 @@ function NavBar() {
           <li>
             <Link
               href="/contactUs"
-              className="block md:inline-block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
+              className="block text-black font-bold text-lg py-2 md:py-0 hover:text-gray-700 transition"
             >
               Contact Us
             </Link>

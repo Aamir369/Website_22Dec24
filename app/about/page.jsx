@@ -3,6 +3,7 @@ import safety1 from "/public/video/aboutus5.jpg";
 import { Kanit } from "next/font/google";
 import Footer from "@/components/footer/footer";
 import clsx from "clsx";
+import Link from "next/link";
 
 const roboto = Kanit({
   subsets: ["latin"],
@@ -76,6 +77,11 @@ export default async function Home() {
             on-site. Additionally, the app enables project managers or safety
             managers to send immediate safety alerts to users.
           </p>
+          <div className="my-8">
+            <Link href="/privacy-policy" className="underline text-blue-700">
+              Read our Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
       <Footer />
