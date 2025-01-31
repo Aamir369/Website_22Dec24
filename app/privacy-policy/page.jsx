@@ -49,13 +49,13 @@ export default function PrivacyPolicy() {
         Location Data: We collect location data solely to verify that
          you are logging in from a designated construction or work area. 
          This ensures compliance with worksite requirements and app 
-         functionality. But this may restrict access to certain app features.
+         functionality. 
         </p>
         <p>
         - Location data is only collected during login and is not continuously tracked or stored.
         </p>
         <p>
-        - You can disable location access in your device settings 
+        - You can disable location access in your device settings, but this may restrict access to certain app features. 
         </p>
         <h2 className="text-2xl font-bold mt-4">How We Use Your Information</h2>
         <ul>
