@@ -78,7 +78,7 @@ export default async function Home() {
             managers to send immediate safety alerts to users.
           </p>
           <div className="my-8">
-            <Link href="/privacy-policy" className="underline text-white-700">
+            <Link href="/privacy-policy" className="underline text-white-700  flash-border p-3 relative">
               Read our Privacy Policy
             </Link>
           </div>
