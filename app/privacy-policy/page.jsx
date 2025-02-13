@@ -3,7 +3,7 @@ import Footer from "@/components/footer/footer";
 export default function PrivacyPolicy() {
   return (
     <>
-      <div className="max-w-screen-lg mx-auto pt-24 md:pt-40 px-4">
+      <div className="max-w-screen-lg mx-auto pt-24 md:pt-40 px-4 font-sans">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-[#201a7a]">Privacy Policy</h1>
           <p className="text-2xl font-bold text-[#201a7a]">Effective Date: 2 January 2025</p>
