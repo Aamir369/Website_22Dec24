@@ -11,6 +11,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../../../components/providers/AuthProvider";
 import { exportToExcel, exportToPDF } from "./export";
 import { query, where } from "firebase/firestore";
+import InjuryReportsTable from "./InjuryReportsTable";
 
 function UserTable() {
   const router = useRouter();
@@ -23,6 +24,8 @@ function UserTable() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [buttonName, setButtonName] = useState("UserTable");
   const [flhaData, setFlhaData] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [injuryReports, setInjuryReports] = useState([]);
   const [sortBy, setSortBy] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [report, setReport] = useState("userReport");
@@ -34,14 +37,14 @@ function UserTable() {
       console.error("Invalid companyId:", companyId);
       return null;
     }
-  
+
     try {
       console.log("Fetching company for ID:", companyId);
-  
+
       const companyCollection = collection(db, "company");
       const q = query(companyCollection, where("company_id", "==", companyId));
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const company = querySnapshot.docs[0].data();
         console.log("Fetched Company Data:", company);
@@ -55,8 +58,7 @@ function UserTable() {
       return null;
     }
   }
-  
-  
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -65,17 +67,15 @@ function UserTable() {
           ...doc.data(),
         }));
         setItems(users);
-  
+
         const currentUserData = users.find(
           (user) => user.email === currentUser.email
         );
-  
+
         if (currentUserData) {
           setCurrentCompanyName(currentUserData.companyName);
           setCurrentUserData(currentUserData);
 
-          console.log(currentUserData);
-  
           if (currentUserData?.companyID) {
             const cData = await getCompanyById(currentUserData.companyID);
             console.log("Fetched Company Data:", cData);
@@ -84,7 +84,7 @@ function UserTable() {
             console.error("Company ID is undefined!");
             setCurrentCompany("Not Available");
           }
-  
+
           if (currentUserData.role === "admin") {
             setSelectedData(users);
             setIsAdmin(true);
@@ -101,10 +101,9 @@ function UserTable() {
         console.error("Error fetching user data:", error);
       }
     };
-  
+
     fetchItems();
   }, [currentUser.email]);
-  
 
   useEffect(() => {
     const flhaItems = async () => {
@@ -131,6 +130,47 @@ function UserTable() {
     flhaItems();
   }, [currentCompanyName, currentUser.email, isAdmin]);
 
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "attendance"));
+        const reports = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAttendance(reports);
+      } catch (error) {
+        console.error("Error fetching attendance: ", error);
+      }
+    };
+
+    fetchAttendance();
+  }, [currentCompanyName, isAdmin]);
+
+  useEffect(() => {
+    const fetchInjuryReports = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "INJURY_REPORTS"));
+        const reports = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        if (isAdmin) {
+          setInjuryReports(reports);
+        } else {
+          const filteredData = reports.filter(
+            (report) => report.company_name === currentCompanyName
+          );
+          setInjuryReports(filteredData);
+        }
+      } catch (error) {
+        console.error("Error fetching injury reports: ", error);
+      }
+    };
+
+    fetchInjuryReports();
+  }, [currentCompanyName, isAdmin]);
+
   const logOut = () => {
     signOut(auth)
       .then(() => {
@@ -147,18 +187,44 @@ function UserTable() {
     try {
       if (importType === "pdf") {
         exportToPDF(
-          buttonName === "UserTable" ? selectedData : flhaData,
-          buttonName === "UserTable" ? "UserData" : "FLHAData",
-          buttonName === "FLHATable" ? "flha" : "users",
+          buttonName === "UserTable"
+            ? selectedData
+            : buttonName === "FLHATable"
+            ? flhaData
+            : injuryReports,
+          buttonName === "UserTable"
+            ? "UserData"
+            : buttonName === "FLHATable"
+            ? "FLHAData"
+            : "InjuryReportsData",
+          buttonName === "FLHATable"
+            ? "flha"
+            : buttonName === "UserTable"
+            ? "users"
+            : "injury_reports",
           signatures,
           currentCompanyData,
           currentUserData,
+          attendance
         );
       } else {
         exportToExcel(
-          buttonName === "UserTable" ? selectedData : flhaData,
-          buttonName === "UserTable" ? "UserData" : "FLHAData",
-          buttonName === "FLHATable" ? "flha" : "users"
+          buttonName === "UserTable"
+            ? selectedData
+            : buttonName === "FLHATable"
+            ? flhaData
+            : injuryReports,
+          buttonName === "UserTable"
+            ? "UserData"
+            : buttonName === "FLHATable"
+            ? "FLHAData"
+            : "InjuryReportsData",
+          buttonName === "FLHATable"
+            ? "flha"
+            : buttonName === "UserTable"
+            ? "users"
+            : "injury_reports",
+          attendance
         );
       }
       console.log("Export successful");
@@ -184,6 +250,14 @@ function UserTable() {
     return sortedData;
   };
 
+  const lastLoginAt = currentUser?.metadata?.lastLoginAt;
+
+  const formatLoginTime = (timestamp) => {
+    if (!timestamp) return "No login data available";
+    const date = new Date(Number(timestamp));
+    return date.toLocaleString();
+  };
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 sm:py-6 bg-zinc-400 w-full max-h-full">
       <div className="sm:flex sm:items-center">
@@ -195,15 +269,22 @@ function UserTable() {
             A list of all the users in your account including their name, title,
             email and role.
           </p>
-          <img src={currentCompanyData?.logo || "Not Available"} width={120} height={80}/>
+          <img
+            src={currentCompanyData?.logo || "Not Available"}
+            width={120}
+            height={80}
+          />
           <h1 className="text-base font-semibold leading-6 text-gray-900">
             COMPANY NAME: {currentCompanyData?.name || "Not Available"}
-        </h1>
-        <h1 className="text-base font-semibold leading-6 text-gray-900">
+          </h1>
+          <h1 className="text-base font-semibold leading-6 text-gray-900">
             COMPANY NAME: {currentUserData?.fullName || "Not Available"}
-        </h1>
+          </h1>
+          <h1 className="text-base font-semibold leading-6 text-gray-900">
+            LAST LOGIN: {formatLoginTime(lastLoginAt)}
+          </h1>
         </div>
-        
+
         <div className="flex justify-end gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
           <select
             onChange={(event) => setSortDirection(event.target.value)}
@@ -233,6 +314,7 @@ function UserTable() {
           >
             <option value="UserTable">User Information Table</option>
             <option value="FLHATable">User FLHA Information</option>
+            <option value="InjuryReportsTable">Injury Reports</option>
           </select>
           <select
             onChange={(event) => setImportType(event.target.value)}
@@ -262,18 +344,16 @@ function UserTable() {
 
       {buttonName === "UserTable" ? (
         <RegesterdUserTable users={sortData(selectedData)} />
+      ) : buttonName === "FLHATable" ? (
+        <RegesterdFLHAtable
+          currentCompanyName={currentCompanyName}
+          admin={isAdmin}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+        />
       ) : (
-        <>
-          <RegesterdFLHAtable
-            currentCompanyName={currentCompanyName}
-            admin={isAdmin}
-            sortBy={sortBy}
-            sortDirection={sortDirection}
-          />
-        </>
+        <InjuryReportsTable reports={injuryReports} />
       )}
-
-      {/* <Regesterdcertificates certificates={items} /> */}
     </div>
   );
 }
