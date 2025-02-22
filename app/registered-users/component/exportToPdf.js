@@ -325,6 +325,19 @@ export const exportToPDF = async (
       2: { halign: "left" },
     },
     pageBreak: "auto",
+    didDrawPage: (data) => {
+      // Add footer with date, time, and user email ID
+      const dateTime = new Date().toLocaleString();
+      const userEmail = currentUserData.email;
+
+      doc.setFontSize(6);
+      doc.text(
+        `${dateTime} - ${userEmail}`,
+        doc.internal.pageSize.width - 10,
+        doc.internal.pageSize.height - 10,
+        { align: "right" }
+      );
+    },
   });
 
   // Adding footer with page numbers

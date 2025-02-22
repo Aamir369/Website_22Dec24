@@ -262,30 +262,33 @@ function UserTable() {
     <div className="px-4 sm:px-6 lg:px-8 sm:py-6 bg-zinc-400 w-full max-h-full">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-semibold leading-6 text-gray-900">
             Users
           </h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm sm:text-base text-gray-700">
             A list of all the users in your account including their name, title,
-            email and role.
+            email, and role.
           </p>
-          <img
-            src={currentCompanyData?.logo || "Not Available"}
-            width={120}
-            height={80}
-          />
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            COMPANY NAME: {currentCompanyData?.name || "Not Available"}
-          </h1>
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            COMPANY NAME: {currentUserData?.fullName || "Not Available"}
-          </h1>
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            LAST LOGIN: {formatLoginTime(lastLoginAt)}
-          </h1>
+          <div className="mt-4">
+            <img
+              src={currentCompanyData?.logo || "Not Available"}
+              width={120}
+              height={80}
+              className="mx-auto sm:mx-0"
+            />
+            <h1 className="text-base font-semibold leading-6 text-gray-900 mt-2">
+              COMPANY NAME: {currentCompanyData?.name || "Not Available"}
+            </h1>
+            <h1 className="text-base font-semibold leading-6 text-gray-900">
+              USER NAME: {currentUserData?.fullName || "Not Available"}
+            </h1>
+            <h1 className="text-base font-semibold leading-6 text-gray-900">
+              LAST LOGIN: {formatLoginTime(lastLoginAt)}
+            </h1>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
           <select
             onChange={(event) => setSortDirection(event.target.value)}
             className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
@@ -305,7 +308,7 @@ function UserTable() {
               selected={startDate}
               onChange={(date) => setStartDate(date)}
               maxDate={new Date()}
-              className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="block w-full sm:w-auto rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             />
           )}
           <select
@@ -337,23 +340,25 @@ function UserTable() {
             onClick={() => logOut()}
             className="block rounded-md border-indigo-600 bg-white px-3 py-2 text-center text-sm font-semibold hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            SignOut
+            Sign Out
           </button>
         </div>
       </div>
 
-      {buttonName === "UserTable" ? (
-        <RegesterdUserTable users={sortData(selectedData)} />
-      ) : buttonName === "FLHATable" ? (
-        <RegesterdFLHAtable
-          currentCompanyName={currentCompanyName}
-          admin={isAdmin}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-        />
-      ) : (
-        <InjuryReportsTable reports={injuryReports} />
-      )}
+      <div className="mt-8 overflow-x-auto">
+        {buttonName === "UserTable" ? (
+          <RegesterdUserTable users={sortData(selectedData)} />
+        ) : buttonName === "FLHATable" ? (
+          <RegesterdFLHAtable
+            currentCompanyName={currentCompanyName}
+            admin={isAdmin}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+          />
+        ) : (
+          <InjuryReportsTable reports={injuryReports} />
+        )}
+      </div>
     </div>
   );
 }
