@@ -3,6 +3,26 @@ import autoTable from "jspdf-autotable";
 import * as FLHA from "./constant_titles";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
+// Utility function to convert a local image to Base64
+const convertImageToBase64 = (imagePath) => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        resolve(reader.result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(xhr.response);
+    };
+    xhr.onerror = reject;
+    xhr.open("GET", imagePath);
+    xhr.responseType = "blob";
+    xhr.send();
+  });
+};
+
+// Function to convert Firebase timestamp to a formatted date and time
 const dateTimeConversion = (timestamp) => {
   const seconds = timestamp.seconds;
   const nanoseconds = timestamp.nanoseconds;
@@ -18,13 +38,13 @@ const dateTimeConversion = (timestamp) => {
   return `${formattedDate} ${timeFormatter.format(date)}`;
 };
 
+// Function to fetch an image from Firebase Storage as Base64
 const fetchImageAsBase64 = async (firebasePath) => {
   const storage = getStorage();
   const storageRef = ref(storage, firebasePath);
 
   try {
     const url = await getDownloadURL(storageRef);
-
     const response = await fetch(url);
     const blob = await response.blob();
 
@@ -39,12 +59,14 @@ const fetchImageAsBase64 = async (firebasePath) => {
   }
 };
 
+// Function to format a date string
 const formatDate = (dateTimeString) => {
   const [datePart, timePart] = dateTimeString.split(" ");
   const [year, month, day] = datePart.split("-");
   return `${day}/${month}/${year}\n${timePart}`;
 };
 
+// Function to preload the company logo from Firebase
 const preloadCompanyLogo = async (logo) => {
   try {
     const image = await fetchImageAsBase64(logo);
@@ -55,6 +77,7 @@ const preloadCompanyLogo = async (logo) => {
   }
 };
 
+// Function to preload multiple images from Firebase
 const preloadImages = async (imageUrls) => {
   const images = await Promise.all(
     imageUrls.map(async (url) => await fetchImageAsBase64(url))
@@ -62,6 +85,7 @@ const preloadImages = async (imageUrls) => {
   return images;
 };
 
+// Main function to export data to PDF
 export const exportToPDF = async (
   data,
   fileName,
@@ -71,7 +95,13 @@ export const exportToPDF = async (
   currentUserData,
   attendance
 ) => {
+  // Preload the company logo from Firebase
   const companyLogo = await preloadCompanyLogo(currentCompanyData.logo);
+
+  // Load the local image and convert it to Base64
+  const localLogoBase64 = await convertImageToBase64(
+    "/video/fulllogo_transparent.png"
+  );
 
   let headers, formattedData, images;
 
@@ -228,7 +258,14 @@ export const exportToPDF = async (
 
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   doc.setFontSize(6);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const logoWidth = 40;
+  const logoX = pageWidth - logoWidth - 10;
+
+  // Replace the Firebase logo with the local logo on the right side
+  doc.addImage(localLogoBase64, "PNG", logoX, 5, logoWidth, 30);
   doc.addImage(companyLogo, "JPEG", 10, 10, 20, 10);
+
   doc.text(`Company Name: ${currentCompanyData.name ?? "N/A"}`, 10, 25);
   doc.text(`Report Printed By: ${currentUserData.fullName ?? "N/A"}`, 10, 30);
 
