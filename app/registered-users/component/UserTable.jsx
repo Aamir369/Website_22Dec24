@@ -1,9 +1,10 @@
 "use client";
 import { auth, db } from "@/lib/firebase/firebaseInit";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDocs } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import RegesterdUserTable from "./RegesterdUserTable";
 import RegesterdFLHAtable from "./RegesterdFLHAtable";
+import InjuryReportsTable from "./InjuryReportsTable";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,8 @@ function UserTable() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [buttonName, setButtonName] = useState("UserTable");
   const [flhaData, setFlhaData] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [injuryReports, setInjuryReports] = useState([]); // Added state
   const [sortBy, setSortBy] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [report, setReport] = useState("userReport");
@@ -74,7 +77,7 @@ function UserTable() {
           setCurrentCompanyName(currentUserData.companyName);
           setCurrentUserData(currentUserData);
 
-          console.log(currentUserData);
+         // console.log(currentUserData);
   
           if (currentUserData?.companyID) {
             const cData = await getCompanyById(currentUserData.companyID);
@@ -105,6 +108,30 @@ function UserTable() {
     fetchItems();
   }, [currentUser.email]);
   
+  useEffect(() => {
+    const fetchInjuryReports = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "INJURY_REPORTS"));
+        const reports = querySnapshot.docs.map((doc) => ({
+          ...doc.data(),
+        }));
+  
+        if (isAdmin) {
+          setInjuryReports(reports);
+        } else {
+          const filteredReports = reports.filter(
+            (report) => report.companyName === currentCompanyName
+          );
+          setInjuryReports(filteredReports);
+        }
+      } catch (error) {
+        console.error("Error fetching injury reports", error);
+      }
+    };
+  
+    fetchInjuryReports();
+  }, [currentCompanyName, isAdmin]); 
+  
 
   useEffect(() => {
     const flhaItems = async () => {
@@ -131,6 +158,47 @@ function UserTable() {
     flhaItems();
   }, [currentCompanyName, currentUser.email, isAdmin]);
 
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "attendance"));
+        const reports = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAttendance(reports);
+      } catch (error) {
+        console.error("Error fetching attendance: ", error);
+      }
+    };
+
+    fetchAttendance();
+  }, [currentCompanyName, isAdmin]);
+
+  useEffect(() => {
+    const fetchInjuryReports = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "INJURY_REPORTS"));
+        const reports = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        if (isAdmin) {
+          setInjuryReports(reports);
+        } else {
+          const filteredData = reports.filter(
+            (report) => report.company_name === currentCompanyName
+          );
+          setInjuryReports(filteredData);
+        }
+      } catch (error) {
+        console.error("Error fetching injury reports: ", error);
+      }
+    };
+
+    fetchInjuryReports();
+  }, [currentCompanyName, isAdmin]);
+
   const logOut = () => {
     signOut(auth)
       .then(() => {
@@ -147,18 +215,53 @@ function UserTable() {
     try {
       if (importType === "pdf") {
         exportToPDF(
-          buttonName === "UserTable" ? selectedData : flhaData,
-          buttonName === "UserTable" ? "UserData" : "FLHAData",
-          buttonName === "FLHATable" ? "flha" : "users",
+         // buttonName === "UserTable" ? selectedData : flhaData,
+         // buttonName === "UserTable" ? "UserData" : "FLHAData",
+          //buttonName === "FLHATable" ? "flha" : "users",
+          //buttonName === "FLHATable" ? "INJURY_REPORTS" : "users",
+
+          buttonName === "UserTable"
+          ? selectedData
+          : buttonName === "FLHATable"
+          ? flhaData
+          : injuryReports,
+        buttonName === "UserTable"
+          ? "UserData"
+          : buttonName === "FLHATable"
+          ? "FLHAData"
+          : "InjuryReportsData",
+        buttonName === "FLHATable"
+          ? "flha"
+          : buttonName === "UserTable"
+          ? "users"
+          : "injury_reports",
+
           signatures,
           currentCompanyData,
           currentUserData,
+          attendance
         );
       } else {
         exportToExcel(
-          buttonName === "UserTable" ? selectedData : flhaData,
-          buttonName === "UserTable" ? "UserData" : "FLHAData",
-          buttonName === "FLHATable" ? "flha" : "users"
+         // buttonName === "UserTable" ? selectedData : flhaData,
+        //  buttonName === "UserTable" ? "UserData" : "FLHAData",
+       //   buttonName === "FLHATable" ? "flha" : "users"
+       buttonName === "UserTable"
+       ? selectedData
+       : buttonName === "FLHATable"
+       ? flhaData
+       : injuryReports,
+     buttonName === "UserTable"
+       ? "UserData"
+       : buttonName === "FLHATable"
+       ? "FLHAData"
+       : "InjuryReportsData",
+     buttonName === "FLHATable"
+       ? "flha"
+       : buttonName === "UserTable"
+       ? "users"
+       : "injury_reports",
+     attendance
         );
       }
       console.log("Export successful");
@@ -183,31 +286,44 @@ function UserTable() {
     });
     return sortedData;
   };
+  const lastLoginAt = currentUser?.metadata?.lastLoginAt;
+
+  const formatLoginTime = (timestamp) => {
+    if (!timestamp) return "No login data available";
+    const date = new Date(Number(timestamp));
+    return date.toLocaleString();
+  };
+
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 sm:py-6 bg-zinc-400 w-full max-h-full">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            Users
+          <h1 className="text-xl sm:text-2xl font-semibold leading-6 text-gray-900">
+            
           </h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm sm:text-base text-gray-700 pt-4">
+
             A list of all the users in your account including their name, title,
             email and role.
           </p>
+          <div className="mt-4">
           <img src={currentCompanyData?.logo || "Not Available"} width={120} height={80}/>
           <h1 className="text-base font-semibold leading-6 text-gray-900">
             COMPANY NAME: {currentCompanyData?.name || "Not Available"}
         </h1>
         <h1 className="text-base font-semibold leading-6 text-gray-900">
-            COMPANY NAME: {currentUserData?.fullName || "Not Available"}
+            LOGGED IN USER NAME: {currentUserData?.fullName || "Not Available"}
         </h1>
+        <h1 className="text-base font-semibold leading-6 text-gray-900">
+            LAST LOGIN: {formatLoginTime(lastLoginAt)}
+          </h1>
         </div>
-        
-        <div className="flex justify-end gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
           <select
             onChange={(event) => setSortDirection(event.target.value)}
-            className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="block w-full sm:w-auto rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             <option value="asc">asc</option>
             <option value="desc">desc</option>
@@ -233,6 +349,7 @@ function UserTable() {
           >
             <option value="UserTable">User Information Table</option>
             <option value="FLHATable">User FLHA Information</option>
+            <option value="InjuryReportsTable">Injury Reports</option>
           </select>
           <select
             onChange={(event) => setImportType(event.target.value)}
@@ -259,21 +376,22 @@ function UserTable() {
           </button>
         </div>
       </div>
-
+      <div className="mt-8 overflow-x-auto">
       {buttonName === "UserTable" ? (
-        <RegesterdUserTable users={sortData(selectedData)} />
+       <RegesterdUserTable users={sortData(selectedData)} />
+      ) : buttonName === "FLHATable" ? (
+        <RegesterdFLHAtable
+          currentCompanyName={currentCompanyName}
+          admin={isAdmin}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+        />
       ) : (
-        <>
-          <RegesterdFLHAtable
-            currentCompanyName={currentCompanyName}
-            admin={isAdmin}
-            sortBy={sortBy}
-            sortDirection={sortDirection}
-          />
-        </>
+        <InjuryReportsTable reports={injuryReports} />
       )}
 
       {/* <Regesterdcertificates certificates={items} /> */}
+      </div>
     </div>
   );
 }

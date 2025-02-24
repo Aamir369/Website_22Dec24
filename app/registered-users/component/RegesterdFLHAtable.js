@@ -125,103 +125,103 @@ const RegesterdFLHATable = ({
   return (
     <div className="overflow-x-auto">
       <div class="flex justify-between items-center py-4">
-      <h2 class="text-lg font-semibold">User FLHA Informatione</h2>
-      <button onclick="exportHtmlToPdf('flha-table', 'FLHA')">Download PDF</button>
+      <h2 class="text-lg font-semibold">List of Logged-in Team Members</h2>
+     {/*<button onclick="exportHtmlToPdf('flha-table', 'FLHA')">Download PDF</button> */} 
     </div>
       <table className="min-w-full divide-y divide-gray-200 border border-gray-100" id="flha-table">
         <thead className="bg-yellow-100 w-full">
           <tr>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               Name & Email
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               PPE Inspected
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               Submitted Date and Time
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+              className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
              Environmental Hazard
             </th>
 
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-black  uppercase tracking-wider bg-green-100"
+              className="px-6 py-3 text-left text-xs font-bold text-black  uppercase tracking-wider bg-green-100"
             >
               Ergonomics Hazards
             </th>
 
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-gray-500"
+              className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-gray-500"
             >
              Access Egress Hazards
             </th>
 
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-black  uppercase tracking-wider bg-green-100"
+              className="px-6 py-3 text-left text-xs font-bold text-black  uppercase tracking-wider bg-green-100"
             >
             Over Head Under Ground Hazards
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-gray-500"
+              className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-gray-500"
             >
             Equipment Vac Truck Hazards
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-black  uppercase tracking-wider bg-green-100"
+              className="px-6 py-3 text-left text-xs font-bold text-black  uppercase tracking-wider bg-green-100"
             >
              Personal Limitations Hazards
             </th>
 
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             All Hazard Remaining
             </th>
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             All Permits Closed Out
             </th>
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             Any Incident
             </th>
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             Area Cleaned Up At End
             </th>
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             Master Point Location
             </th>
             <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-white  uppercase tracking-wider bg-gray-500"
+                className="px-6 py-3 text-left text-xs font-bold text-white  uppercase tracking-wider bg-gray-500"
             >
             Signature
             </th>

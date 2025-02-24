@@ -1,16 +1,29 @@
+"use client";
 import Image from "next/image";
 import safety1 from "/public/video/aboutus5.jpg";
 import { Kanit } from "next/font/google";
 import Footer from "@/components/footer/footer";
 import clsx from "clsx";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 const roboto = Kanit({
   subsets: ["latin"],
   weight: ["400"],
 });
 
-export default async function Home() {
+export default function Home() {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  // Auto-open video when the page loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVideoOpen(true);
+    }, 3000); // Delay auto popup by 3 seconds
+
+    return () => clearTimeout(timer); // Cleanup timer on unmount
+  }, []);
+
+
   return (
     <>
       <div
@@ -45,8 +58,8 @@ export default async function Home() {
           color: "white",
         }}
       >
-        <div className="max-w-5xl mx-auto rounded-lg shadow-lg pt-8 z-10 text-white">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 md:mb-10 mt-16 md:mt-32">
+        <div className="max-w-6xl mx-auto rounded-lg shadow-lg pt-0 z-10 text-white">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 md:mb-10 mt-16 md:mt-8">
             About Us
           </h2>
           <p className="text-base sm:text-lg md:text-xl font-bold">
@@ -82,8 +95,38 @@ export default async function Home() {
               Read our Privacy Policy
             </Link>
           </div>
+          <button
+            onClick={() => setIsVideoOpen(true)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg mt-4 hover:bg-blue-700"
+          >
+            Watch Video
+          </button>
+
         </div>
       </div>
+      {/* Video Popup */}
+      {isVideoOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50"
+          onClick={() => setIsVideoOpen(false)}  // Click outside to close
+        >
+          <div
+            className="relative w-11/12 md:w-3/4 lg:w-1/2"
+            onClick={(e) => e.stopPropagation()}  // Prevent closing when clicking inside
+          >
+            <button
+              onClick={() => setIsVideoOpen(false)}  // ✅ Ensure this closes the video
+              className="absolute top-2 right-2 bg-white text-black p-2 rounded-full"
+            >
+              ✕
+            </button>
+            <video controls autoPlay className="w-full rounded-lg">
+              <source src="/video/finalvideo.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      )}
       <Footer />
     </>
   );

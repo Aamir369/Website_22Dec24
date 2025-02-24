@@ -4,70 +4,70 @@ const RegesterdUserTable = ({ users }) => {
       <h2 className="text-lg font-semibold mb-4">User Information</h2>
       <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
         <thead className="bg-yellow-100 w-full">
-          <tr>
+          <tr >
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               FullName
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               Email
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               CompanyName
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               BirthDate
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               CompanyID
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               CreatedAt
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               JobID
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               JoinedDate
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               ProfilePic
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               Role
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
               SiteID
             </th>
@@ -106,7 +106,7 @@ const RegesterdUserTable = ({ users }) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString()}{" "}
+                  {new Date(user.createdAt).toLocaleDateString()}{"@"}
                   {new Date(user.createdAt).toLocaleTimeString()}
                 </div>
               </td>
