@@ -6,6 +6,7 @@ import Footer from "@/components/footer/footer";
 import clsx from "clsx";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import Script from "next/script";
 
 const roboto = Kanit({
   subsets: ["latin"],
