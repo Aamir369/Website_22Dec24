@@ -124,8 +124,8 @@ export default function Home() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            maxWidth: "1200px",
-            height: "auto",
+            maxWidth: "1400px",
+            height: "745px",
             margin: "auto",
             padding: "1.5rem",
             color: "white",
@@ -147,34 +147,48 @@ export default function Home() {
                 (CSD)
               </p>
               <p className="text-2xl lg:text-4xl py-2">Edmonton - Alberta</p>
-              <div className="flex flex-col items-center text-xl lg:text-3xl space-y-2 lg:space-y-4 py-2 lg:py-4">
-                <div className="inline-flex items-center">
-                  <svg
-                    className="w-8 h-6 lg:w-14 lg:h-10 mr-2"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="white"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4Zm12 12V5H7v11h10Zm-5 1a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  +1-587-990-6399
-                </div>
-                <div className="inline-flex items-center">
-                  <svg
-                    className="w-8 h-6 lg:w-14 lg:h-10 mr-2"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="white"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M7.978 4a2.553 2.553 0 0 0-1.926.877C4.233 6.7 3.699 8.751 4.153 10.814c.44 1.995 1.778 3.893 3.456 5.572 1.68 1.679 3.577 3.018 5.57 3.459 2.062.456 4.115-.073 5.94-1.885a2.556 2.556 0 0 0 .001-3.861l-1.21-1.21a2.689 2.689 0 0 0-3.802 0l-.617.618a.806.806 0 0 1-1.14 0l-1.854-1.855a.807.807 0 0 1 0-1.14l.618-.62a2.692 2.692 0 0 0 0-3.803l-1.21-1.211A2.555 2.555 0 0 0 7.978 4Z" />
-                  </svg>
-                  +1-780-465-5595
-                </div>
+              <div className="flex items-center justify-center text-xl lg:text-3xl space-x-6 lg:space-x-12 py-2 lg:py-4">
+              <div className="flex items-center">
+                <svg
+                  className="w-8 h-6 lg:w-14 lg:h-10 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="white"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4Zm12 12V5H7v11h10Zm-5 1a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-white">+1-587-990-6399</span>
               </div>
+
+              <div className="flex items-center">
+                <svg
+                  className="w-8 h-6 lg:w-14 lg:h-10 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="white"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M7.978 4a2.553 2.553 0 0 0-1.926.877C4.233 6.7 3.699 8.751 4.153 10.814c.44 1.995 1.778 3.893 3.456 5.572 1.68 1.679 3.577 3.018 5.57 3.459 2.062.456 4.115-.073 5.94-1.885a2.556 2.556 0 0 0 .001-3.861l-1.21-1.21a2.689 2.689 0 0 0-3.802 0l-.617.618a.806.806 0 0 1-1.14 0l-1.854-1.855a.807.807 0 0 1 0-1.14l.618-.62a2.692 2.692 0 0 0 0-3.803l-1.21-1.211A2.555 2.555 0 0 0 7.978 4Z" />
+                </svg>
+                <span className="text-white">+1-780-465-5595</span>
+              </div> 
+            </div>
+            <div className="flex justify-center w-full">
+            <a href="mailto:aamir.mughal@kineticdataminds.ca" className="flex items-center text-white hover:text-gray-300 space-x-2 text-lg lg:text-2xl">
+                <svg
+                  className="w-8 h-6 lg:w-10 lg:h-8 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="white"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm16 4l-8 5-8-5v10h16V8zm-8 3l8-5H4l8 5z" />
+                </svg>
+                aamir.mughal@kineticdataminds.ca
+              </a> 
+            </div> 
             </div>
 
             {/* Contact Form */}
