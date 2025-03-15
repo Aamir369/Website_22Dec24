@@ -115,11 +115,17 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}  // Prevent closing when clicking inside
           >
             <button
-              onClick={() => setIsVideoOpen(false)}  // ✅ Ensure this closes the video
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsVideoOpen(false);
+              }}
               className="absolute top-2 right-2 bg-white text-black p-2 rounded-full"
+              style={{ pointerEvents: "auto", zIndex: 9999 }}
             >
               ✕
             </button>
+
+
             <video controls autoPlay className="w-full rounded-lg">
               <source src="/video/finalvideo.mp4" type="video/mp4" />
               Your browser does not support the video tag.
