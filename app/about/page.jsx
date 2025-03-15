@@ -18,7 +18,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVideoOpen(true);
-    }, 3000); // Delay auto popup by 3 seconds
+    }, 500); // Delay auto popup by 3 seconds
 
     return () => clearTimeout(timer); // Cleanup timer on unmount
   }, []);
