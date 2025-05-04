@@ -44,7 +44,7 @@ const InjuryReportsTable = ({ reports }) => {
               scope="col"
               className="px-6 py-3   text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
-              Incident reported Date 
+              Date Submitted 
             </th>
             <th
               scope="col"
