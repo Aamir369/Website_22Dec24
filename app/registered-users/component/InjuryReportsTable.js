@@ -24,7 +24,7 @@ const InjuryReportsTable = ({ reports }) => {
   }, [reports]);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-[600px]">
       <div className="flex justify-between items-center py-4">
         <h2 className="text-lg font-semibold">Injury Reports</h2>
       </div>
@@ -32,7 +32,7 @@ const InjuryReportsTable = ({ reports }) => {
         className="table-auto w-full border border-gray-300 border-collapse"
         id="injury-reports-table"
       >
-        <thead className="bg-yellow-100">
+        <thead className="bg-yellow-100 sticky top-0 z-10 width-full">
           <tr >
             <th
               scope="col"

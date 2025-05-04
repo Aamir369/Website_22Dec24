@@ -1,9 +1,9 @@
 const RegesterdUserTable = ({ users }) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-[600px]">
       <h2 className="text-lg font-semibold mb-4">User Information</h2>
       <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
-        <thead className="bg-yellow-100 w-full">
+        <thead className="sticky top-0 z-10 bg-yellow-100 shadow w-full">
           <tr >
             <th
               scope="col"

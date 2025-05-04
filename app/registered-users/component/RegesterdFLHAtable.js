@@ -123,13 +123,13 @@ const RegesterdFLHATable = ({
   }, [admin, currentCompanyName, sortBy, sortDirection]);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto  max-h-[600px]">
       <div class="flex justify-between items-center py-4">
       <h2 class="text-lg font-semibold">List of Logged-in Team Members</h2>
      {/*<button onclick="exportHtmlToPdf('flha-table', 'FLHA')">Download PDF</button> */} 
     </div>
       <table className="min-w-full divide-y divide-gray-200 border border-gray-100" id="flha-table">
-        <thead className="bg-yellow-100 w-full">
+        <thead className="sticky top-0 z-10 bg-yellow-100 shadow">
           <tr>
             <th
               scope="col"
