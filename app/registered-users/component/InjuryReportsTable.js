@@ -29,129 +29,130 @@ const InjuryReportsTable = ({ reports }) => {
         <h2 className="text-lg font-semibold">Injury Reports</h2>
       </div>
       <table
-        className="min-w-full divide-y divide-gray-200 border border-gray-100"
+        className="table-auto w-full border border-gray-300 border-collapse"
         id="injury-reports-table"
       >
-        <thead className="bg-yellow-100 w-full">
-          <tr>
+        <thead className="bg-yellow-100">
+          <tr >
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 w-32 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Company Name
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3   text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
-              Date
+              Incident reported Date 
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3  text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Reported By
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3   text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Category
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-2 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Location
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3   text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Incident Date
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Reported To OHS Date
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Images
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Organizational Factors
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Other Circumstances
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Tools/Materials/Equipment
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Work Site Conditions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
+        <tbody >
           {selectedData.map((report, index) => (
             <tr
               key={index}
-              className={
-                index % 2 === 0 ? "bg-white border-b" : "bg-gray-50 border-b"
+              className={` ${
+              index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } hover:bg-gray-100`
               }
             >
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.company_name}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.date}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.reported_by}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.category}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.location}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.incidentDateAndTime}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.incidentReportedToOHSDateAndTime}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-6 py-4  whitespace-normal break-words border border-gray-300">
                 <div className="flex flex-wrap gap-2">
                   {report.injury_data.events.map((event, eventIndex) =>
                     event.images.map((image, imgIndex) => (
@@ -167,23 +168,23 @@ const InjuryReportsTable = ({ reports }) => {
                   )}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.organizationalFactors}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.otherCircumstances}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.toolsMaterialsEquipment}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+              <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
+                <div className="text-sm font-medium text-black">
                   {report.injury_data.workSiteConditions}
                 </div>
               </td>

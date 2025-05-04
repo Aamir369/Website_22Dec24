@@ -291,7 +291,14 @@ function UserTable() {
   const formatLoginTime = (timestamp) => {
     if (!timestamp) return "No login data available";
     const date = new Date(Number(timestamp));
-    return date.toLocaleString();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    const time = date.toLocaleTimeString();
+    
+    return `${day}-${month}-${year}, ${time}`;
+
+   // return date.toLocaleString();
   };
 
 
