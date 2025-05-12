@@ -37,14 +37,14 @@ function UserTable() {
       console.error("Invalid companyId:", companyId);
       return null;
     }
-  
+
     try {
       console.log("Fetching company for ID:", companyId);
-  
+
       const companyCollection = collection(db, "company");
       const q = query(companyCollection, where("company_id", "==", companyId));
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const company = querySnapshot.docs[0].data();
         console.log("Fetched Company Data:", company);
@@ -58,8 +58,8 @@ function UserTable() {
       return null;
     }
   }
-  
-  
+
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -68,17 +68,17 @@ function UserTable() {
           ...doc.data(),
         }));
         setItems(users);
-  
+
         const currentUserData = users.find(
           (user) => user.email === currentUser.email
         );
-  
+
         if (currentUserData) {
           setCurrentCompanyName(currentUserData.companyName);
           setCurrentUserData(currentUserData);
 
-         // console.log(currentUserData);
-  
+          // console.log(currentUserData);
+
           if (currentUserData?.companyID) {
             const cData = await getCompanyById(currentUserData.companyID);
             console.log("Fetched Company Data:", cData);
@@ -87,7 +87,7 @@ function UserTable() {
             console.error("Company ID is undefined!");
             setCurrentCompany("Not Available");
           }
-  
+
           if (currentUserData.role === "admin") {
             setSelectedData(users);
             setIsAdmin(true);
@@ -104,10 +104,10 @@ function UserTable() {
         console.error("Error fetching user data:", error);
       }
     };
-  
+
     fetchItems();
   }, [currentUser.email]);
-  
+
   useEffect(() => {
     const fetchInjuryReports = async () => {
       try {
@@ -115,7 +115,7 @@ function UserTable() {
         const reports = querySnapshot.docs.map((doc) => ({
           ...doc.data(),
         }));
-  
+
         if (isAdmin) {
           setInjuryReports(reports);
         } else {
@@ -128,10 +128,10 @@ function UserTable() {
         console.error("Error fetching injury reports", error);
       }
     };
-  
+
     fetchInjuryReports();
-  }, [currentCompanyName, isAdmin]); 
-  
+  }, [currentCompanyName, isAdmin]);
+
 
   useEffect(() => {
     const flhaItems = async () => {
@@ -215,26 +215,26 @@ function UserTable() {
     try {
       if (importType === "pdf") {
         exportToPDF(
-         // buttonName === "UserTable" ? selectedData : flhaData,
-         // buttonName === "UserTable" ? "UserData" : "FLHAData",
+          // buttonName === "UserTable" ? selectedData : flhaData,
+          // buttonName === "UserTable" ? "UserData" : "FLHAData",
           //buttonName === "FLHATable" ? "flha" : "users",
           //buttonName === "FLHATable" ? "INJURY_REPORTS" : "users",
 
           buttonName === "UserTable"
-          ? selectedData
-          : buttonName === "FLHATable"
-          ? flhaData
-          : injuryReports,
-        buttonName === "UserTable"
-          ? "UserData"
-          : buttonName === "FLHATable"
-          ? "FLHAData"
-          : "InjuryReportsData",
-        buttonName === "FLHATable"
-          ? "flha"
-          : buttonName === "UserTable"
-          ? "users"
-          : "injury_reports",
+            ? selectedData
+            : buttonName === "FLHATable"
+              ? flhaData
+              : injuryReports,
+          buttonName === "UserTable"
+            ? "UserData"
+            : buttonName === "FLHATable"
+              ? "FLHAData"
+              : "InjuryReportsData",
+          buttonName === "FLHATable"
+            ? "flha"
+            : buttonName === "UserTable"
+              ? "users"
+              : "injury_reports",
 
           signatures,
           currentCompanyData,
@@ -243,25 +243,25 @@ function UserTable() {
         );
       } else {
         exportToExcel(
-         // buttonName === "UserTable" ? selectedData : flhaData,
-        //  buttonName === "UserTable" ? "UserData" : "FLHAData",
-       //   buttonName === "FLHATable" ? "flha" : "users"
-       buttonName === "UserTable"
-       ? selectedData
-       : buttonName === "FLHATable"
-       ? flhaData
-       : injuryReports,
-     buttonName === "UserTable"
-       ? "UserData"
-       : buttonName === "FLHATable"
-       ? "FLHAData"
-       : "InjuryReportsData",
-     buttonName === "FLHATable"
-       ? "flha"
-       : buttonName === "UserTable"
-       ? "users"
-       : "injury_reports",
-     attendance
+          // buttonName === "UserTable" ? selectedData : flhaData,
+          //  buttonName === "UserTable" ? "UserData" : "FLHAData",
+          //   buttonName === "FLHATable" ? "flha" : "users"
+          buttonName === "UserTable"
+            ? selectedData
+            : buttonName === "FLHATable"
+              ? flhaData
+              : injuryReports,
+          buttonName === "UserTable"
+            ? "UserData"
+            : buttonName === "FLHATable"
+              ? "FLHAData"
+              : "InjuryReportsData",
+          buttonName === "FLHATable"
+            ? "flha"
+            : buttonName === "UserTable"
+              ? "users"
+              : "injury_reports",
+          attendance
         );
       }
       console.log("Export successful");
@@ -295,10 +295,10 @@ function UserTable() {
     const month = date.toLocaleString('en-US', { month: 'short' });
     const year = date.getFullYear();
     const time = date.toLocaleTimeString();
-    
+
     return `${day}-${month}-${year}, ${time}`;
 
-   // return date.toLocaleString();
+    // return date.toLocaleString();
   };
 
 
@@ -307,7 +307,7 @@ function UserTable() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl sm:text-2xl font-semibold leading-6 text-gray-900">
-            
+
           </h1>
           <p className="mt-2 text-sm sm:text-base text-gray-700 pt-4">
 
@@ -315,17 +315,17 @@ function UserTable() {
             email and role.
           </p>
           <div className="mt-4">
-          <img src={currentCompanyData?.logo || "Not Available"} width={120} height={80}/>
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            COMPANY NAME: {currentCompanyData?.name || "Not Available"}
-        </h1>
-        <h1 className="text-base font-semibold leading-6 text-gray-900">
-            LOGGED IN USER NAME: {currentUserData?.fullName || "Not Available"}
-        </h1>
-        <h1 className="text-base font-semibold leading-6 text-gray-900">
-            LAST LOGIN: {formatLoginTime(lastLoginAt)}
-          </h1>
-        </div>
+            <img src={currentCompanyData?.logo || "Not Available"} width={120} height={80} />
+            <h1 className="text-base font-semibold leading-6 text-gray-900">
+              COMPANY NAME: {currentCompanyData?.name || "Not Available"}
+            </h1>
+            <h1 className="text-base font-semibold leading-6 text-gray-900">
+              LOGGED IN USER NAME: {currentUserData?.fullName || "Not Available"}
+            </h1>
+            <h1 className="text-base font-semibold leading-6 text-gray-900">
+              LAST LOGIN: {formatLoginTime(lastLoginAt)}
+            </h1>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
           <select
@@ -384,20 +384,20 @@ function UserTable() {
         </div>
       </div>
       <div className="mt-8 overflow-x-auto">
-      {buttonName === "UserTable" ? (
-       <RegesterdUserTable users={sortData(selectedData)} />
-      ) : buttonName === "FLHATable" ? (
-        <RegesterdFLHAtable
-          currentCompanyName={currentCompanyName}
-          admin={isAdmin}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-        />
-      ) : (
-        <InjuryReportsTable reports={injuryReports} />
-      )}
+        {buttonName === "UserTable" ? (
+          <RegesterdUserTable users={sortData(selectedData)} />
+        ) : buttonName === "FLHATable" ? (
+          <RegesterdFLHAtable
+            currentCompanyName={currentCompanyName}
+            admin={isAdmin}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+          />
+        ) : (
+          <InjuryReportsTable reports={injuryReports} />
+        )}
 
-      {/* <Regesterdcertificates certificates={items} /> */}
+        {/* <Regesterdcertificates certificates={items} /> */}
       </div>
     </div>
   );

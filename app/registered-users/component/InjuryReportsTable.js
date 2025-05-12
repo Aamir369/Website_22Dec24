@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase/firebaseInit";
 import { collection, getDocs } from "firebase/firestore";
 import { DateTimeUtility } from "@/lib/utils/DateTimeUtility";
+import IncidentReportForm from './IncidentReportForm';
+
+
+
 
 const InjuryReportsTable = ({ reports }) => {
   const [selectedData, setSelectedData] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
 
   // Sort data based on the provided criteria
   const sortData = (data) => {
@@ -22,6 +28,18 @@ const InjuryReportsTable = ({ reports }) => {
     const sortedReports = sortData(reports);
     setSelectedData(sortedReports);
   }, [reports]);
+  const handleViewReport = (report) => {
+    setSelectedReport(report);
+  };
+
+  const handleBackToTable = () => {
+    setSelectedReport(null);
+  };
+
+  // Show IncidentReportForm when a report is selected
+  if (selectedReport) {
+    return <IncidentReportForm report={selectedReport} onBack={handleBackToTable} />;
+  }
 
   return (
     <div className="overflow-x-auto max-h-[600px]">
@@ -44,7 +62,7 @@ const InjuryReportsTable = ({ reports }) => {
               scope="col"
               className="px-6 py-3   text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
-              Date Submitted 
+              Date Submitted
             </th>
             <th
               scope="col"
@@ -75,6 +93,9 @@ const InjuryReportsTable = ({ reports }) => {
               className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Reported To OHS Date
+            </th>
+            <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Report Link
             </th>
             <th
               scope="col"
@@ -112,9 +133,8 @@ const InjuryReportsTable = ({ reports }) => {
           {selectedData.map((report, index) => (
             <tr
               key={index}
-              className={` ${
-              index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                        } hover:bg-gray-100`
+              className={` ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                } hover:bg-gray-100`
               }
             >
               <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
@@ -151,6 +171,14 @@ const InjuryReportsTable = ({ reports }) => {
                 <div className="text-sm font-medium text-black">
                   {report.injury_data.incidentReportedToOHSDateAndTime}
                 </div>
+              </td>
+              <td className="px-6 py-4 border border-gray-300">
+                <button
+                  onClick={() => handleViewReport(report)}
+                  className="text-blue-500 underline"
+                >
+                  View Report
+                </button>
               </td>
               <td className="px-6 py-4  whitespace-normal break-words border border-gray-300">
                 <div className="flex flex-wrap gap-2">

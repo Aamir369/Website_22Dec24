@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import UserTable from "./component/UserTable";
+import IncidentReportForm from './component/IncidentReportForm';
 
 function RegisteredUserPage() {
   const [isVisible, setIsVisible] = useState(true);
@@ -20,12 +21,12 @@ function RegisteredUserPage() {
   }, []);
 
   return (
+
     <>
       {/*<header className={`text-center pt-40 transition-opacity duration-500 ${isVisible ? "opacity-100" : "opacity-0"}`}>*/}
       <header
-        className={`fixed top-0 w-full bg-white shadow-md text-center py-5 transition-opacity duration-500 z-50 ${
-          isVisible ? "opacity-300" : "opacity-0"
-        }`}
+        className={`fixed top-0 w-full bg-white shadow-md text-center py-5 transition-opacity duration-500 z-50 ${isVisible ? "opacity-300" : "opacity-0"
+          }`}
       >
 
         <h2 className="text-5xl text-slate-900 mt-10">Registered Users</h2>
@@ -33,6 +34,7 @@ function RegisteredUserPage() {
       <main className="min-h-screen pt-28 py-24">
         <UserTable />
       </main>
+
     </>
   );
 }
