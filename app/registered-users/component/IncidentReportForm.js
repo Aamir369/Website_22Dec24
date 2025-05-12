@@ -2,20 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { auth, db } from "@/lib/firebase/firebaseInit";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { useAuth } from "@/components/providers/AuthProvider";
-import Link from 'next/link';
+import Link from "next/link";
 import ReturnToWorkPlan from "../component/returntoworkplan";
 
-
-export default function IncidentReportForm({ report, onBack }) {
+export default function IncidentReportForm({
+  report,
+  onBack,
+  onReturnToWorkPlan,
+}) {
   const isPrefilled = report != null;
 
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const imageRef = useRef(null);
-
-  const [showReturnToWorkPlan, setShowReturnToWorkPlan] = useState(false);
-
-
 
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
@@ -27,7 +26,6 @@ export default function IncidentReportForm({ report, onBack }) {
     setIsDrawing(true);
   };
 
-
   const stopDrawing = () => {
     setIsDrawing(false);
   };
@@ -35,7 +33,7 @@ export default function IncidentReportForm({ report, onBack }) {
   const [formData, setFormData] = useState({
     returnToEmails: "",
     documentTypes: [],
-    workdayIncident: [],   // ✅ add this line
+    workdayIncident: [], // ✅ add this line
     otherWorkdayIncidentDescription: "", // for the text input
     reportCompletedByname: "",
     reportCompletedByTitle: "",
@@ -52,10 +50,7 @@ export default function IncidentReportForm({ report, onBack }) {
     reportReviewedByTitle: "",
     reportReviewedByDepartment: "",
     reportReviewedByDate: "",
-    investigationTeamMembers: [
-      { name: "", title: "" },
-
-    ],
+    investigationTeamMembers: [{ name: "", title: "" }],
     reportSubmittedByName: "",
     reportSubmittedBySignature: "",
     reportSubmittedByDate: "",
@@ -67,10 +62,16 @@ export default function IncidentReportForm({ report, onBack }) {
     InjuredEmployeesNames: [],
     InjuredemployeeId: [],
     injuredEmployees: [
-      { name: "", id: "", dateOfBirth: "", jobTitle: "", department: "", employeeType: "", lengthOfTime: "" }
+      {
+        name: "",
+        id: "",
+        dateOfBirth: "",
+        jobTitle: "",
+        department: "",
+        employeeType: "",
+        lengthOfTime: "",
+      },
     ],
-
-
 
     location: "",
     time: "",
@@ -93,7 +94,7 @@ export default function IncidentReportForm({ report, onBack }) {
     workplaceCultureDescription: "",
     unsafeActsReported: "",
     similarIncidentsPrior: "",
-    receivedBy: ""
+    receivedBy: "",
   });
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,8 +110,8 @@ export default function IncidentReportForm({ report, onBack }) {
             {
               content: formData.incidentDescription || "",
               heading: formData.incidentDescription || "",
-              images: [] // Add image URLs if you want
-            }
+              images: [], // Add image URLs if you want
+            },
           ],
           location: formData.location || "",
           incidentDateAndTime: formData.dateOfIncident || "",
@@ -119,8 +120,7 @@ export default function IncidentReportForm({ report, onBack }) {
           otherCircumstances: formData.incidentDescription || "",
           toolsMaterialsEquipment: formData.protectiveEquipment || "",
           workSiteConditions: formData.unsafeConditions || "",
-
-        }
+        },
       };
 
       await addDoc(collection(db, "incidentReports"), docData);
@@ -128,7 +128,7 @@ export default function IncidentReportForm({ report, onBack }) {
       if (onBack) onBack(); // go back to table
     } catch (error) {
       console.error("Error saving report:", error);
-      alert("Failed to submit report. Please try again.")
+      alert("Failed to submit report. Please try again.");
     }
   };
 
@@ -143,7 +143,6 @@ export default function IncidentReportForm({ report, onBack }) {
       setFormData((prev) => ({
         ...prev,
         [fieldName]: [...(prev[fieldName] || []), value],
-
       }));
     } else {
       setFormData((prev) => ({
@@ -164,16 +163,24 @@ export default function IncidentReportForm({ report, onBack }) {
       ...formData,
       injuredEmployees: [
         ...formData.injuredEmployees,
-        { name: "", id: "", dateOfBirth: "", jobTitle: "", department: "", employeeType: "", lengthOfTime: "" }
-      ]
+        {
+          name: "",
+          id: "",
+          dateOfBirth: "",
+          jobTitle: "",
+          department: "",
+          employeeType: "",
+          lengthOfTime: "",
+        },
+      ],
     });
   };
   const removeInjuredEmployee = (index) => {
-    const updatedEmployees = formData.injuredEmployees.filter((_, i) => i !== index);
+    const updatedEmployees = formData.injuredEmployees.filter(
+      (_, i) => i !== index
+    );
     setFormData({ ...formData, injuredEmployees: updatedEmployees });
   };
-
-
 
   const injuryOptions = [
     "Abrasion, scrapes",
@@ -189,7 +196,7 @@ export default function IncidentReportForm({ report, onBack }) {
     "Illness",
     "Sprain, strain",
     "Damage to body system",
-    "Other (describe)"
+    "Other (describe)",
   ];
 
   const { currentUser } = useAuth();
@@ -229,7 +236,6 @@ export default function IncidentReportForm({ report, onBack }) {
     }
   }, []);
 
-
   // ✅ Pre-fill form when report prop changes
   useEffect(() => {
     // 1️⃣ Canvas sizing
@@ -249,20 +255,22 @@ export default function IncidentReportForm({ report, onBack }) {
         image.onload = setCanvasSize;
       }
     }
-
   }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const q = query(collection(db, "users"), where("email", "==", currentUser.email));
+      const q = query(
+        collection(db, "users"),
+        where("email", "==", currentUser.email)
+      );
       const snapshot = await getDocs(q);
       const userData = snapshot.docs[0]?.data();
       if (userData) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
 
           reportCompletedByname: userData.fullName || "",
-          reportCompletedByTitle: userData.title || ""
+          reportCompletedByTitle: userData.title || "",
         }));
       }
     };
@@ -273,7 +281,10 @@ export default function IncidentReportForm({ report, onBack }) {
   useEffect(() => {
     const fetchIncidentReport = async () => {
       try {
-        const q = query(collection(db, "incidentReports"), where("company_id", "==", formData.employeeId));
+        const q = query(
+          collection(db, "incidentReports"),
+          where("company_id", "==", formData.employeeId)
+        );
         const snapshot = await getDocs(q);
 
         if (!snapshot.empty) {
@@ -284,7 +295,8 @@ export default function IncidentReportForm({ report, onBack }) {
             protectiveEquipment: doc.injury_data?.toolsMaterialsEquipment || "",
             location: doc.injury_data?.location || "",
             dateOfIncident: doc.injury_data?.incidentDateAndTime || "",
-            dateOfReport: doc.injury_data?.incidentReportedToOHSDateAndTime || "",
+            dateOfReport:
+              doc.injury_data?.incidentReportedToOHSDateAndTime || "",
             unsafeConditions: doc.injury_data?.workSiteConditions || "",
             natureOfInjury: doc.injury_data?.category || "",
           }));
@@ -301,11 +313,9 @@ export default function IncidentReportForm({ report, onBack }) {
     }
   }, [formData.employeeId]);
 
-
   useEffect(() => {
-
     if (report) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         employeeName: report.reported_by || "",
         location: report.injury_data?.location || "",
@@ -320,7 +330,6 @@ export default function IncidentReportForm({ report, onBack }) {
 
         protectiveEquipment: report.injury_data?.toolsMaterialsEquipment || "",
         incidentDescription: report?.events?.[0]?.content || "",
-
       }));
     }
   }, [report]);
@@ -355,13 +364,29 @@ export default function IncidentReportForm({ report, onBack }) {
   return (
     <div className="min-h-screen p-4 bg-gray-400">
       <div className="max-w-4xl mx-auto p-8 bg-white border-4 border-black border-double rounded-lg shadow-lg">
-
         <form onSubmit={handleSubmit}>
-          <h1 className="text-xl font-bold mb-4">Supervisor's Incident Investigation Report</h1>
-          <input type="email" name="returnToEmails" placeholder="Return completed form to (email addresses)" value={formData.returnToEmails} onChange={handleChange} className="border w-full bg-[#edf2f9] mb-2 p-2" />
-          <label className="block font-medium mb-1">THIS FORM SERVES TO DOCUMENT (select all that apply): </label>
+          <h1 className="text-xl font-bold mb-4">
+            Supervisor's Incident Investigation Report
+          </h1>
+          <input
+            type="email"
+            name="returnToEmails"
+            placeholder="Return completed form to (email addresses)"
+            value={formData.returnToEmails}
+            onChange={handleChange}
+            className="border w-full bg-[#edf2f9] mb-2 p-2"
+          />
+          <label className="block font-medium mb-1">
+            THIS FORM SERVES TO DOCUMENT (select all that apply):{" "}
+          </label>
           <div className="flex flex-wrap gap-6 mb-4 bg-[#edf2f9]">
-            {["Death", "Lost Time", "ER / Clinic Treatment", "First Aid Only", "Near Miss"].map((item) => (
+            {[
+              "Death",
+              "Lost Time",
+              "ER / Clinic Treatment",
+              "First Aid Only",
+              "Near Miss",
+            ].map((item) => (
               <label
                 key={item}
                 className="flex items-center border border-gray-400 rounded px-3 py-2 cursor-pointer"
@@ -391,14 +416,17 @@ export default function IncidentReportForm({ report, onBack }) {
                 {item}
               </label>
             ))}
-
           </div>
           <div className="mb-4">
             <div className="flex flex-wrap">
               <label className="w-1/4 font-medium mb-1">Name</label>
               <label className="w-1/4 font-medium mb-1">Title</label>
-              <label className="w-1/4 font-medium mb-1">Date of Incident & Time</label>
-              <label className="w-1/4 font-medium mb-1">Date of Reporting & Time</label>
+              <label className="w-1/4 font-medium mb-1">
+                Date of Incident & Time
+              </label>
+              <label className="w-1/4 font-medium mb-1">
+                Date of Reporting & Time
+              </label>
             </div>
             <div className="flex space-x-2">
               <input
@@ -408,7 +436,9 @@ export default function IncidentReportForm({ report, onBack }) {
                 value={formData.reportCompletedByname}
                 readOnly
                 //className={"border w-1/4 p-2 bg-gray-100 bg-[#edf2f9]"}
-                className={`border bg-[#edf2f9] p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`}
+                className={`border bg-[#edf2f9] p-2 ${
+                  isPrefilled ? "text-red-600 font-semibold" : ""
+                }`}
               />
               <input
                 type="text"
@@ -423,20 +453,26 @@ export default function IncidentReportForm({ report, onBack }) {
                 name="dateOfIncident"
                 value={formData.dateOfIncident}
                 onChange={handleChange}
-                className={`border bg-[#edf2f9] p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`}
+                className={`border bg-[#edf2f9] p-2 ${
+                  isPrefilled ? "text-red-600 font-semibold" : ""
+                }`}
               />
               <input
                 type="datetime-local"
                 name="dateOfReport"
                 value={formData.dateOfReport}
                 onChange={handleChange}
-                className={`border bg-[#edf2f9] p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`}
+                className={`border bg-[#edf2f9] p-2 ${
+                  isPrefilled ? "text-red-600 font-semibold" : ""
+                }`}
               />
             </div>
           </div>
           <div className="mb-4">
             <div className="flex space-x-2 mb-1">
-              <label className="w-1/3 text-sm font-medium">Reporting Employee</label>
+              <label className="w-1/3 text-sm font-medium">
+                Reporting Employee
+              </label>
             </div>
             <div className="flex space-x-2">
               <input
@@ -444,33 +480,116 @@ export default function IncidentReportForm({ report, onBack }) {
                 placeholder="Employee Name"
                 value={report.reported_by}
                 onChange={handleChange}
-                className={`border bg-[#edf2f9] p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`}
+                className={`border bg-[#edf2f9] p-2 ${
+                  isPrefilled ? "text-red-600 font-semibold" : ""
+                }`}
               />
             </div>
           </div>
           <div className="mb-4">
-            <label className="block font-medium mb-1">Injured Employee(s):</label>
+            <label className="block font-medium mb-1">
+              Injured Employee(s):
+            </label>
             {formData.injuredEmployees.map((employee, index) => (
               <div key={index} className="border p-3 mb-3 rounded bg-gray-50">
                 <div className="flex flex-wrap gap-2 mb-2">
-                  <input name={`injuredEmployeeName${index}`} placeholder="Employee Name" value={employee.name} onChange={(e) => handleEmployeeChange(index, "name", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
-                  <input name={`injuredEmployeeId${index}`} placeholder="Employee ID" value={employee.id} onChange={(e) => handleEmployeeChange(index, "id", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9] " />
-                  <input type="date" name={`injuredEmployeeDOB${index}`} value={employee.dateOfBirth} onChange={(e) => handleEmployeeChange(index, "dateOfBirth", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
+                  <input
+                    name={`injuredEmployeeName${index}`}
+                    placeholder="Employee Name"
+                    value={employee.name}
+                    onChange={(e) =>
+                      handleEmployeeChange(index, "name", e.target.value)
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
+                  <input
+                    name={`injuredEmployeeId${index}`}
+                    placeholder="Employee ID"
+                    value={employee.id}
+                    onChange={(e) =>
+                      handleEmployeeChange(index, "id", e.target.value)
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9] "
+                  />
+                  <input
+                    type="date"
+                    name={`injuredEmployeeDOB${index}`}
+                    value={employee.dateOfBirth}
+                    onChange={(e) =>
+                      handleEmployeeChange(index, "dateOfBirth", e.target.value)
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
                 </div>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  <input name={`jobTitle${index}`} placeholder="Job Title" value={employee.jobTitle} onChange={(e) => handleEmployeeChange(index, "jobTitle", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
-                  <input name={`department${index}`} placeholder="Department" value={employee.department} onChange={(e) => handleEmployeeChange(index, "department", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
-                  <input name={`employeeType${index}`} placeholder="Employee Type" value={employee.employeeType} onChange={(e) => handleEmployeeChange(index, "employeeType", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
-                  <input name={`lengthOfTime${index}`} placeholder="Length of Time in Job" value={employee.lengthOfTime} onChange={(e) => handleEmployeeChange(index, "lengthOfTime", e.target.value)} className="border w-1/4 p-2 bg-[#edf2f9]" />
-                  <button type="button" onClick={addInjuredEmployee} className="bg-green-500 text-white px-2 rounded">+</button>
+                  <input
+                    name={`jobTitle${index}`}
+                    placeholder="Job Title"
+                    value={employee.jobTitle}
+                    onChange={(e) =>
+                      handleEmployeeChange(index, "jobTitle", e.target.value)
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
+                  <input
+                    name={`department${index}`}
+                    placeholder="Department"
+                    value={employee.department}
+                    onChange={(e) =>
+                      handleEmployeeChange(index, "department", e.target.value)
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
+                  <input
+                    name={`employeeType${index}`}
+                    placeholder="Employee Type"
+                    value={employee.employeeType}
+                    onChange={(e) =>
+                      handleEmployeeChange(
+                        index,
+                        "employeeType",
+                        e.target.value
+                      )
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
+                  <input
+                    name={`lengthOfTime${index}`}
+                    placeholder="Length of Time in Job"
+                    value={employee.lengthOfTime}
+                    onChange={(e) =>
+                      handleEmployeeChange(
+                        index,
+                        "lengthOfTime",
+                        e.target.value
+                      )
+                    }
+                    className="border w-1/4 p-2 bg-[#edf2f9]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addInjuredEmployee}
+                    className="bg-green-500 text-white px-2 rounded"
+                  >
+                    +
+                  </button>
                   {/* Remove Button */}
-                  {formData.injuredEmployees.length > 1 && (<button type="button" onClick={() => removeInjuredEmployee(index)} className="bg-red-500 text-white px-2 rounded" >-</button>)}
+                  {formData.injuredEmployees.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeInjuredEmployee(index)}
+                      className="bg-red-500 text-white px-2 rounded"
+                    >
+                      -
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
           <h2 className="font-semibold text-lg">
-            Nature Of Injury <span className="italic text-sm">(select all that apply)</span>
+            Nature Of Injury{" "}
+            <span className="italic text-sm">(select all that apply)</span>
           </h2>
           <div className="grid grid-cols-3 gap-4">
             {injuryOptions.map((injury, index) => (
@@ -489,13 +608,18 @@ export default function IncidentReportForm({ report, onBack }) {
 
           {(formData.injuryType || []).includes("Other (describe)") && (
             <div className="mt-2">
-              <label className="block font-medium">Please describe other injury:</label>
+              <label className="block font-medium">
+                Please describe other injury:
+              </label>
               <input
                 type="text"
                 name="otherInjuryDescription"
                 value={formData.otherInjuryDescription || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, otherInjuryDescription: e.target.value })
+                  setFormData({
+                    ...formData,
+                    otherInjuryDescription: e.target.value,
+                  })
                 }
                 className="border rounded w-full p-2"
                 placeholder="Describe the injury..."
@@ -522,13 +646,15 @@ export default function IncidentReportForm({ report, onBack }) {
 
             {/* Right: Image + Canvas */}
             <div className="flex-1 h-full">
-              <h2 className="font-semibold mb-2">Part of Body Affected (draw to mark)</h2>
+              <h2 className="font-semibold mb-2">
+                Part of Body Affected (draw to mark)
+              </h2>
               <div className="relative inline-block  w-full h-full">
                 <img
                   ref={imageRef}
                   src="/video/frontandbackbody.png"
                   alt="Body Map"
-                  style={{ width: '100%', height: 'auto', zIndex: 1 }}
+                  style={{ width: "100%", height: "auto", zIndex: 1 }}
                   className="w-full object-contain select-none"
                 />
                 <canvas
@@ -541,17 +667,19 @@ export default function IncidentReportForm({ report, onBack }) {
                   onMouseLeave={stopDrawing}
                   className="absolute top-0 left-0"
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     left: 0,
                     zIndex: 10,
-                    cursor: isErasing ? 'not-allowed' : 'crosshair',
+                    cursor: isErasing ? "not-allowed" : "crosshair",
                   }}
                 />
                 <button
                   type="button"
                   onClick={toggleEraser}
-                  className={`px-3 py-1 rounded ${isErasing ? "bg-yellow-400" : "bg-gray-300"}`}
+                  className={`px-3 py-1 rounded ${
+                    isErasing ? "bg-yellow-400" : "bg-gray-300"
+                  }`}
                 >
                   {isErasing ? "Erasing..." : "Eraser Mode"}
                 </button>
@@ -559,10 +687,19 @@ export default function IncidentReportForm({ report, onBack }) {
             </div>
           </div>
 
-
-          <input name="location" placeholder="Location" value={formData.location} onChange={handleChange} className={`border w-full p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`} />
+          <input
+            name="location"
+            placeholder="Location"
+            value={formData.location}
+            onChange={handleChange}
+            className={`border w-full p-2 ${
+              isPrefilled ? "text-red-600 font-semibold" : ""
+            }`}
+          />
           <div className="w-full border rounded p-2 bg-gray-50 mb-4">
-            <label className="font-medium block mb-1">What part of the employee's workday did the incident occur?</label>
+            <label className="font-medium block mb-1">
+              What part of the employee's workday did the incident occur?
+            </label>
             <div className="grid grid-cols-3 gap-px border border-gray-400 text-sm">
               <label className="flex items-center gap-2 p-2 border border-gray-300 bg-gray-100">
                 <input
@@ -631,7 +768,9 @@ export default function IncidentReportForm({ report, onBack }) {
           <div className="flex gap-4">
             {/* Witnesses dynamic inputs */}
             <div className="flex-1">
-              <label className="block font-medium mb-1">WITNESSES <span className="italic text-sm">if any</span></label>
+              <label className="block font-medium mb-1">
+                WITNESSES <span className="italic text-sm">if any</span>
+              </label>
 
               {formData.witnesses.map((witness, index) => (
                 <div key={index} className="flex space-x-2 mb-2">
@@ -650,8 +789,13 @@ export default function IncidentReportForm({ report, onBack }) {
                     <button
                       type="button"
                       onClick={() => {
-                        const updatedWitnesses = formData.witnesses.filter((_, i) => i !== index);
-                        setFormData({ ...formData, witnesses: updatedWitnesses });
+                        const updatedWitnesses = formData.witnesses.filter(
+                          (_, i) => i !== index
+                        );
+                        setFormData({
+                          ...formData,
+                          witnesses: updatedWitnesses,
+                        });
                       }}
                       className="bg-red-500 text-white px-2 rounded "
                     >
@@ -663,7 +807,12 @@ export default function IncidentReportForm({ report, onBack }) {
 
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, witnesses: [...formData.witnesses, ""] })}
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    witnesses: [...formData.witnesses, ""],
+                  })
+                }
                 className="bg-green-500 text-white px-2 rounded "
               >
                 Add Witness
@@ -673,13 +822,19 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Protective Equipment textarea */}
             <div className="flex-1">
               <label className="block font-medium mb-1">
-                PROTECTIVE EQUIPMENT <span className="italic text-sm">List any personal protective equipment used at the time of the incident.</span>
+                PROTECTIVE EQUIPMENT{" "}
+                <span className="italic text-sm">
+                  List any personal protective equipment used at the time of the
+                  incident.
+                </span>
               </label>
               <textarea
                 name="protectiveEquipment"
                 value={formData.protectiveEquipment}
                 onChange={handleChange}
-                className={`border bg-[#edf2f9] p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`}
+                className={`border bg-[#edf2f9] p-2 ${
+                  isPrefilled ? "text-red-600 font-semibold" : ""
+                }`}
                 placeholder="Enter protective equipment..."
               />
             </div>
@@ -694,7 +849,7 @@ export default function IncidentReportForm({ report, onBack }) {
             onChange={(e) =>
               setFormData((prev) => ({
                 ...prev,
-                incidentDescription: e.target.value
+                incidentDescription: e.target.value,
               }))
             }
           />
@@ -724,7 +879,6 @@ export default function IncidentReportForm({ report, onBack }) {
             )}
           </div>
 
-
           <div className="grid grid-cols-2 gap-4">
             {/* Unsafe Workplace Conditions */}
             <div>
@@ -735,12 +889,20 @@ export default function IncidentReportForm({ report, onBack }) {
                 <label key={idx} className="block mb-4">
                   <input
                     type="checkbox"
-                    checked={formData.unsafeWorkplaceConditions.includes(condition)}
+                    checked={formData.unsafeWorkplaceConditions.includes(
+                      condition
+                    )}
                     onChange={() => {
-                      const updated = formData.unsafeWorkplaceConditions.includes(condition)
-                        ? formData.unsafeWorkplaceConditions.filter((c) => c !== condition)
-                        : [...formData.unsafeWorkplaceConditions, condition];
-                      setFormData({ ...formData, unsafeWorkplaceConditions: updated });
+                      const updated =
+                        formData.unsafeWorkplaceConditions.includes(condition)
+                          ? formData.unsafeWorkplaceConditions.filter(
+                              (c) => c !== condition
+                            )
+                          : [...formData.unsafeWorkplaceConditions, condition];
+                      setFormData({
+                        ...formData,
+                        unsafeWorkplaceConditions: updated,
+                      });
                     }}
                     className="mr-2"
                   />
@@ -752,7 +914,10 @@ export default function IncidentReportForm({ report, onBack }) {
                 <textarea
                   value={formData.otherUnsafeCondition || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, otherUnsafeCondition: e.target.value })
+                    setFormData({
+                      ...formData,
+                      otherUnsafeCondition: e.target.value,
+                    })
                   }
                   className="border p-2 bg-[#edf2f9] w-full"
                 />
@@ -803,7 +968,10 @@ export default function IncidentReportForm({ report, onBack }) {
                 name="whyUnsafeConditionsExist"
                 value={formData.whyUnsafeConditionsExist || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, whyUnsafeConditionsExist: e.target.value })
+                  setFormData({
+                    ...formData,
+                    whyUnsafeConditionsExist: e.target.value,
+                  })
                 }
                 className="border p-2 bg-[#edf2f9] w-full h-32"
               />
@@ -818,7 +986,10 @@ export default function IncidentReportForm({ report, onBack }) {
                 name="whyUnsafeActsOccur"
                 value={formData.whyUnsafeActsOccur || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, whyUnsafeActsOccur: e.target.value })
+                  setFormData({
+                    ...formData,
+                    whyUnsafeActsOccur: e.target.value,
+                  })
                 }
                 className="border p-2 bg-[#edf2f9] w-full h-32 "
               />
@@ -828,7 +999,8 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Question 1 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
-                Is there a workplace culture, norm, or expectation that may have encouraged the unsafe conditions or acts?
+                Is there a workplace culture, norm, or expectation that may have
+                encouraged the unsafe conditions or acts?
               </label>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-1">
@@ -838,7 +1010,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="YES"
                     checked={formData.workplaceCultureEncouraged === "YES"}
                     onChange={(e) =>
-                      setFormData({ ...formData, workplaceCultureEncouraged: e.target.value })
+                      setFormData({
+                        ...formData,
+                        workplaceCultureEncouraged: e.target.value,
+                      })
                     }
                   />
                   YES
@@ -850,7 +1025,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="NO"
                     checked={formData.workplaceCultureEncouraged === "NO"}
                     onChange={(e) =>
-                      setFormData({ ...formData, workplaceCultureEncouraged: e.target.value })
+                      setFormData({
+                        ...formData,
+                        workplaceCultureEncouraged: e.target.value,
+                      })
                     }
                   />
                   NO
@@ -859,12 +1037,17 @@ export default function IncidentReportForm({ report, onBack }) {
 
               {formData.workplaceCultureEncouraged === "YES" && (
                 <div className="mt-2">
-                  <label className="block font-medium mb-1">If yes, describe:</label>
+                  <label className="block font-medium mb-1">
+                    If yes, describe:
+                  </label>
                   <textarea
                     name="workplaceCultureDescription"
                     value={formData.workplaceCultureDescription || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, workplaceCultureDescription: e.target.value })
+                      setFormData({
+                        ...formData,
+                        workplaceCultureDescription: e.target.value,
+                      })
                     }
                     className="border p-2bg-[#edf2f9] w-full"
                     placeholder="Describe..."
@@ -876,7 +1059,8 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Question 2 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
-                Were the unsafe acts or conditions reported prior to the incident?
+                Were the unsafe acts or conditions reported prior to the
+                incident?
               </label>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-1">
@@ -886,7 +1070,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="YES"
                     checked={formData.unsafeActsReported === "YES"}
                     onChange={(e) =>
-                      setFormData({ ...formData, unsafeActsReported: e.target.value })
+                      setFormData({
+                        ...formData,
+                        unsafeActsReported: e.target.value,
+                      })
                     }
                   />
                   YES
@@ -898,7 +1085,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="NO"
                     checked={formData.unsafeActsReported === "NO"}
                     onChange={(e) =>
-                      setFormData({ ...formData, unsafeActsReported: e.target.value })
+                      setFormData({
+                        ...formData,
+                        unsafeActsReported: e.target.value,
+                      })
                     }
                   />
                   NO
@@ -909,7 +1099,8 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Question 3 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
-                Have there been similar incidents or near misses prior to this one?
+                Have there been similar incidents or near misses prior to this
+                one?
               </label>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-1">
@@ -919,7 +1110,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="YES"
                     checked={formData.similarIncidentsPrior === "YES"}
                     onChange={(e) =>
-                      setFormData({ ...formData, similarIncidentsPrior: e.target.value })
+                      setFormData({
+                        ...formData,
+                        similarIncidentsPrior: e.target.value,
+                      })
                     }
                   />
                   YES
@@ -931,7 +1125,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     value="NO"
                     checked={formData.similarIncidentsPrior === "NO"}
                     onChange={(e) =>
-                      setFormData({ ...formData, similarIncidentsPrior: e.target.value })
+                      setFormData({
+                        ...formData,
+                        similarIncidentsPrior: e.target.value,
+                      })
                     }
                   />
                   NO
@@ -943,8 +1140,12 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Suggestions checkboxes + other description */}
             <div>
               <h3 className="font-semibold mb-2">
-                What changes do you suggest to prevent this incident / near miss from happening again?
-                <span className="italic text-sm  "> (select all that apply)</span>
+                What changes do you suggest to prevent this incident / near miss
+                from happening again?
+                <span className="italic text-sm  ">
+                  {" "}
+                  (select all that apply)
+                </span>
               </h3>
               {[
                 "Stop this activity",
@@ -961,12 +1162,24 @@ export default function IncidentReportForm({ report, onBack }) {
                 <label key={idx} className="block">
                   <input
                     type="checkbox"
-                    checked={formData.preventionSuggestions?.includes(suggestion)}
+                    checked={formData.preventionSuggestions?.includes(
+                      suggestion
+                    )}
                     onChange={() => {
-                      const updated = formData.preventionSuggestions?.includes(suggestion)
-                        ? formData.preventionSuggestions.filter((s) => s !== suggestion)
-                        : [...(formData.preventionSuggestions || []), suggestion];
-                      setFormData({ ...formData, preventionSuggestions: updated });
+                      const updated = formData.preventionSuggestions?.includes(
+                        suggestion
+                      )
+                        ? formData.preventionSuggestions.filter(
+                            (s) => s !== suggestion
+                          )
+                        : [
+                            ...(formData.preventionSuggestions || []),
+                            suggestion,
+                          ];
+                      setFormData({
+                        ...formData,
+                        preventionSuggestions: updated,
+                      });
                     }}
                     className="mr-2 "
                   />
@@ -994,7 +1207,8 @@ export default function IncidentReportForm({ report, onBack }) {
             {/* Action textarea */}
             <div>
               <h3 className="font-semibold mb-2 ">
-                What should be (or has been) done to carry out the suggestion(s) selected above?
+                What should be (or has been) done to carry out the suggestion(s)
+                selected above?
               </h3>
               <textarea
                 name="preventionActionsTaken"
@@ -1011,7 +1225,6 @@ export default function IncidentReportForm({ report, onBack }) {
             </div>
           </div>
           <div className="space-y-6">
-
             {/* REPORT WRITTEN BY */}
             <div>
               <h3 className="font-semibold mb-1">REPORT WRITTEN BY</h3>
@@ -1096,7 +1309,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     onChange={(e) => {
                       const updated = [...formData.investigationTeamMembers];
                       updated[index].name = e.target.value;
-                      setFormData({ ...formData, investigationTeamMembers: updated });
+                      setFormData({
+                        ...formData,
+                        investigationTeamMembers: updated,
+                      });
                     }}
                     placeholder="Name"
                     className="border p-2 bg-[#edf2f9] w-full"
@@ -1106,7 +1322,10 @@ export default function IncidentReportForm({ report, onBack }) {
                     onChange={(e) => {
                       const updated = [...formData.investigationTeamMembers];
                       updated[index].title = e.target.value;
-                      setFormData({ ...formData, investigationTeamMembers: updated });
+                      setFormData({
+                        ...formData,
+                        investigationTeamMembers: updated,
+                      });
                     }}
                     placeholder="Title"
                     className="border p-2 w-full bg-[#edf2f9] "
@@ -1130,7 +1349,6 @@ export default function IncidentReportForm({ report, onBack }) {
                 Add Member
               </button>
             </div>
-
 
             {/* REPORT SUBMITTED BY */}
             <div>
@@ -1189,30 +1407,32 @@ export default function IncidentReportForm({ report, onBack }) {
             </div>
           </div>
           <div className="flex space-x-4 pt-4">
-            <button type="submit" className="bg-blue-500 text-white px-4 py-4 rounded">Submit</button>
+            <button
+              type="submit"
+              className="bg-blue-500 text-white px-4 py-4 rounded"
+            >
+              Submit
+            </button>
             {onBack && (
-              <button type="button" onClick={onBack} className="bg-gray-500 text-white px-4 py-4 rounded">
+              <button
+                type="button"
+                onClick={onBack}
+                className="bg-gray-500 text-white px-4 py-4 rounded"
+              >
                 Back to Table
               </button>
             )}
             <>
-              {!showReturnToWorkPlan && (
-                <button
-                  onClick={() => setShowReturnToWorkPlan(true)}
-                  className="bg-green-700 text-white px-4 py-4 rounded"
-                >
-                  Return to Work Plan
-                </button>
-              )}
-
-              {showReturnToWorkPlan && <ReturnToWorkPlan />}
+              <button
+                onClick={onReturnToWorkPlan}
+                className="bg-green-700 text-white px-4 py-4 rounded"
+              >
+                Return to Work Plan
+              </button>
             </>
           </div>
-        </form >
+        </form>
       </div>
     </div>
-
-
-  )
-
+  );
 }

@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase/firebaseInit";
 import { collection, getDocs } from "firebase/firestore";
 import { DateTimeUtility } from "@/lib/utils/DateTimeUtility";
-import IncidentReportForm from './IncidentReportForm';
-
-
-
+import IncidentReportForm from "./IncidentReportForm";
+import ReturnToWorkPlan from "./returntoworkplan";
 
 const InjuryReportsTable = ({ reports }) => {
   const [selectedData, setSelectedData] = useState([]);
@@ -36,9 +34,21 @@ const InjuryReportsTable = ({ reports }) => {
     setSelectedReport(null);
   };
 
+  const [showReturnToWorkPlan, setShowReturnToWorkPlan] = useState(false);
+
   // Show IncidentReportForm when a report is selected
   if (selectedReport) {
-    return <IncidentReportForm report={selectedReport} onBack={handleBackToTable} />;
+    return showReturnToWorkPlan ? (
+      <ReturnToWorkPlan
+        ReturnToIncidentReport={() => setShowReturnToWorkPlan(false)}
+      />
+    ) : (
+      <IncidentReportForm
+        report={selectedReport}
+        onBack={handleBackToTable}
+        onReturnToWorkPlan={() => setShowReturnToWorkPlan(true)}
+      />
+    );
   }
 
   return (
@@ -51,7 +61,7 @@ const InjuryReportsTable = ({ reports }) => {
         id="injury-reports-table"
       >
         <thead className="bg-yellow-100 sticky top-0 z-10 width-full">
-          <tr >
+          <tr>
             <th
               scope="col"
               className="px-6 py-3 w-32 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
@@ -129,13 +139,13 @@ const InjuryReportsTable = ({ reports }) => {
             </th>
           </tr>
         </thead>
-        <tbody >
+        <tbody>
           {selectedData.map((report, index) => (
             <tr
               key={index}
-              className={` ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } hover:bg-gray-100`
-              }
+              className={` ${
+                index % 2 === 0 ? "bg-white" : "bg-gray-50"
+              } hover:bg-gray-100`}
             >
               <td className="px-6 py-4 whitespace-normal break-words border border-gray-300">
                 <div className="text-sm font-medium text-black">
