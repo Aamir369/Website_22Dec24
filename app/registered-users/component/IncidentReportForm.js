@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { auth, db } from "@/lib/firebase/firebaseInit";
+import { db } from "@/lib/firebase/firebaseInit";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { useAuth } from "@/components/providers/AuthProvider";
-import Link from "next/link";
-import ReturnToWorkPlan from "../component/returntoworkplan";
 
 export default function IncidentReportForm({
   report,
@@ -96,21 +94,23 @@ export default function IncidentReportForm({
     similarIncidentsPrior: "",
     receivedBy: "",
   });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const docData = {
         company_id: formData.employeeId || "",
         company_name: formData.employeeName || "",
         date: new Date().toISOString(),
         injury_data: {
-          activities: [], // You can optionally map formData here
+          activities: [], // Can be mapped from formData if needed
           category: formData.natureOfInjury || "",
           events: [
             {
               content: formData.incidentDescription || "",
               heading: formData.incidentDescription || "",
-              images: [], // Add image URLs if you want
+              images: [], // Will add canvas image if available
             },
           ],
           location: formData.location || "",
@@ -120,12 +120,84 @@ export default function IncidentReportForm({
           otherCircumstances: formData.incidentDescription || "",
           toolsMaterialsEquipment: formData.protectiveEquipment || "",
           workSiteConditions: formData.unsafeConditions || "",
+
+          // Additional fields from the form
+          injuredEmployees: formData.injuredEmployees,
+          injuryType: formData.injuryType,
+          witnesses: formData.witnesses,
+          unsafeWorkplaceConditions: formData.unsafeWorkplaceConditions,
+          unsafeActsByPeople: formData.unsafeActsByPeople,
+          whyUnsafeConditionsExist: formData.whyUnsafeConditionsExist,
+          whyUnsafeActsOccur: formData.whyUnsafeActsOccur,
+          preventionSuggestions: formData.preventionSuggestions,
+          preventionActionsTaken: formData.preventionActionsTaken,
+          attachments: formData.attachments.map((file) => file.name),
+        },
+        metadata: {
+          reportCompletedBy: {
+            name: formData.reportCompletedByname,
+            title: formData.reportCompletedByTitle,
+          },
+          signatures: {
+            writtenBy: {
+              name: formData.reportWrittenByName,
+              title: formData.reportWrittenByTitle,
+              department: formData.reportWrittenByDepartment,
+              date: formData.reportWrittenByDate,
+            },
+            reviewedBy: {
+              name: formData.reportReviewedByName,
+              title: formData.reportReviewedByTitle,
+              department: formData.reportReviewedByDepartment,
+              date: formData.reportReviewedByDate,
+            },
+            investigationTeam: formData.investigationTeamMembers,
+          },
         },
       };
 
+      // Get canvas image if available
+      let canvasImage = null;
+      if (canvasRef.current) {
+        canvasImage = canvasRef.current.toDataURL("image/png");
+        docData.injury_data.events[0].images.push(canvasImage);
+      }
+
+      // Save to Firestore
       await addDoc(collection(db, "incidentReports"), docData);
-      alert("Report submitted successfully!");
-      if (onBack) onBack(); // go back to table
+
+      // Send email if recipient is specified
+      if (formData.returnToEmails) {
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
+            },
+            body: JSON.stringify({
+              toEmail: formData.returnToEmails,
+              reportData: docData, // Send the structured data
+              canvasImage: canvasImage,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Failed to send email");
+          }
+
+          alert("Report submitted and email sent successfully!");
+        } catch (emailError) {
+          console.error("Email sending failed:", emailError);
+          alert("Report submitted successfully but email failed to send.");
+        }
+      } else {
+        alert("Report submitted successfully!");
+      }
+
+      if (onBack) onBack();
     } catch (error) {
       console.error("Error saving report:", error);
       alert("Failed to submit report. Please try again.");
