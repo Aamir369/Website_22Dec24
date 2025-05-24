@@ -1,7 +1,90 @@
 import { useState, useEffect, useRef } from "react";
-import { db } from "@/lib/firebase/firebaseInit";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { auth, db, storage } from "@/lib/firebase/firebaseInit";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  setDoc,
+  getDoc,
+  doc,
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/components/providers/AuthProvider";
+import Link from "next/link";
+import ReturnToWorkPlan from "../component/returntoworkplan";
+import { deleteObject } from "firebase/storage";
+
+const deleteOldCanvasImage = async (imageUrl) => {
+  if (!imageUrl || !imageUrl.includes("firebase")) return;
+
+  try {
+    const storageRef = ref(storage, imageUrl);
+    await deleteObject(storageRef);
+    console.log("✅ Old canvas image deleted.");
+  } catch (error) {
+    console.warn("⚠️ Failed to delete old image:", error);
+  }
+};
+
+const initialFormData = {
+  returnToEmails: "",
+  documentTypes: [],
+  workdayIncident: [],
+  workdayIncidentOther: "",
+  reportCompletedByName: "",
+  reportCompletedByTitle: "",
+  dateOfIncident: "",
+  dateOfReport: "",
+  preventionSuggestions: [],
+  preventionSuggestionsOther: "",
+  preventionActionsTaken: "",
+  reportWrittenByName: "",
+  reportWrittenByTitle: "",
+  reportWrittenByDepartment: "",
+  reportWrittenByDate: "",
+  reportReviewedByName: "",
+  reportReviewedByTitle: "",
+  reportReviewedByDepartment: "",
+  reportReviewedByDate: "",
+  reportSubmittedByName: "",
+  reportSubmittedBySignature: "",
+  reportSubmittedByDate: "",
+  reportReceivedByName: "",
+  reportReceivedBySignature: "",
+  reportReceivedByDate: "",
+  investigationTeamMembers: [{ name: "", title: "" }],
+  reported_by: "",
+  injuredEmployees: [
+    {
+      name: "",
+      id: "",
+      dateOfBirth: "",
+      jobTitle: "",
+      department: "",
+      employeeType: "",
+      lengthOfTime: "",
+    },
+  ],
+  injuryOptions: [],
+  location: "",
+  incidentDescription: "",
+  protectiveEquipment: "",
+  witnesses: [""],
+  unsafeWorkplaceConditions: [],
+  otherUnsafeCondition: "",
+  unsafeActsByPeople: [],
+  otherUnsafeAct: "",
+  whyUnsafeConditionsExist: "",
+  whyUnsafeActsOccur: "",
+  workplaceCultureEncouraged: "",
+  workplaceCultureDescription: "",
+  unsafeActsReported: "",
+  similarIncidentsPrior: "",
+  attachments: [],
+};
 
 export default function IncidentReportForm({
   report,
@@ -9,10 +92,141 @@ export default function IncidentReportForm({
   onReturnToWorkPlan,
 }) {
   const isPrefilled = report != null;
-
+  const { currentUser } = useAuth();
+  const [formData, setFormData] = useState(initialFormData);
+  const [imageSrc, setImageSrc] = useState("/video/frontandbackbody.png");
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const imageRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [isErasing, setIsErasing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+
+  // Fetch manager details and incident data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUser?.email) return;
+
+      try {
+        // Fetch manager details
+        const userQuery = query(
+          collection(db, "users"),
+          where("email", "==", currentUser.email)
+        );
+        const userSnapshot = await getDocs(userQuery);
+
+        if (!userSnapshot.empty) {
+          const userData = userSnapshot.docs[0].data();
+          setFormData((prev) => ({
+            ...prev,
+            reportCompletedByName: userData.fullName || "",
+            reportCompletedByTitle: userData.title || "",
+            reportWrittenByName: userData.fullName || "",
+            reportWrittenByTitle: userData.title || "",
+            reportWrittenByDepartment: userData.department || "",
+          }));
+        }
+
+        // If report exists, fetch incident data
+        if (report) {
+          console.log("Report data:", report);
+          setFormData((prev) => ({
+            ...prev,
+            reported_by: report.reported_by || "",
+            location: report.injury_data?.location || "",
+            dateOfIncident: report.injury_data?.incidentDateAndTime
+              ? report.injury_data.incidentDateAndTime.slice(0, 16)
+              : "",
+            dateOfReport: report.injury_data?.incidentReportedToOHSDateAndTime
+              ? report.injury_data.incidentReportedToOHSDateAndTime.slice(0, 16)
+              : "",
+            injuryOptions: report.injuryOptions?.InjuryType || [],
+            natureOfInjury: report.injury_data?.category || "",
+            protectiveEquipment:
+              report.injury_data?.toolsMaterialsEquipment || "",
+            incidentDescription: report?.events?.[0]?.content || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [currentUser, report]);
+
+  const toggleEraser = () => {
+    setIsErasing(!isErasing);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const injuryOptions = [
+    "Abrasion, scrapes",
+    "Amputation",
+    "Broken Bone",
+    "Bruise",
+    "Burn (heat)",
+    "Burn (chemical)",
+    "Concussion",
+    "Crushing Injury",
+    "Cut, laceration, puncture",
+    "Hernia",
+    "Illness",
+    "Sprain, strain",
+    "Damage to body system",
+    "Other (describe)",
+  ];
+
+  const workplaceConditions = [
+    "Inadequate guard",
+    "Unguarded hazard",
+    "Safety device is defective",
+    "Tool or equipment defective",
+    "Workstation layout is hazardous",
+    "Unsafe lighting",
+    "Unsafe ventilation",
+    "Lack of needed personal protective equipment",
+    "Lack of appropriate equipment / tools",
+    "Unsafe clothing",
+    "No training or insufficient training",
+  ];
+
+  const actsByPeople = [
+    "Operating without permissions",
+    "Operating at unsafe speed",
+    "Servicing equipment that has power to it",
+    "Making a safety device inoperative",
+    "Using defective equipment",
+    "Using equipment in an unapproved way",
+    "Unsafe lifting",
+    "Taking an unsafe position or posture",
+    "Distraction, teasing, horseplay",
+    "Failure to wear personal protective equipment",
+    "Failure to use the available equipment / tools",
+  ];
+
+  const addInjuredEmployee = () => {
+    setFormData({
+      ...formData,
+      injuredEmployees: [
+        ...formData.injuredEmployees,
+        {
+          name: "",
+          id: "",
+          dateOfBirth: "",
+          jobTitle: "",
+          department: "",
+          employeeType: "",
+          lengthOfTime: "",
+        },
+      ],
+    });
+  };
 
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
@@ -21,186 +235,151 @@ export default function IncidentReportForm({
     ctx.beginPath();
     ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     console.log("Mouse down at", e.clientX, e.clientY);
+    setHasDrawn(true);
     setIsDrawing(true);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (isErasing) {
+      ctx.clearRect(x - 15, y - 15, 30, 30);
+    } else {
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
   };
 
-  const [formData, setFormData] = useState({
-    returnToEmails: "",
-    documentTypes: [],
-    workdayIncident: [], // ✅ add this line
-    otherWorkdayIncidentDescription: "", // for the text input
-    reportCompletedByname: "",
-    reportCompletedByTitle: "",
-    dateOfIncident: "",
-    dateOfReport: "",
-    preventionSuggestions: [],
-    preventionSuggestionsOther: "",
-    preventionActionsTaken: "",
-    reportWrittenByName: "",
-    reportWrittenByTitle: "",
-    reportWrittenByDepartment: "",
-    reportWrittenByDate: "",
-    reportReviewedByName: "",
-    reportReviewedByTitle: "",
-    reportReviewedByDepartment: "",
-    reportReviewedByDate: "",
-    investigationTeamMembers: [{ name: "", title: "" }],
-    reportSubmittedByName: "",
-    reportSubmittedBySignature: "",
-    reportSubmittedByDate: "",
-    reportReceivedByName: "",
-    reportReceivedBySignature: "",
-    reportReceivedByDate: "",
-    reported_by: "",
+  const prepareCanvasImageForPDF = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    InjuredEmployeesNames: [],
-    InjuredemployeeId: [],
-    injuredEmployees: [
-      {
-        name: "",
-        id: "",
-        dateOfBirth: "",
-        jobTitle: "",
-        department: "",
-        employeeType: "",
-        lengthOfTime: "",
-      },
-    ],
+    const dataURL = canvas.toDataURL("image/png");
 
-    location: "",
-    time: "",
-    injuryType: [],
+    const img = document.createElement("img");
+    img.src = dataURL;
+    img.style.width = "100%";
 
-    witnesses: [],
-    protectiveEquipment: "",
-    incidentDescription: "",
-    whyUnsafeConditionsExist: "",
-    whyUnsafeActsOccur: "",
-    correctiveActions: "",
-    reportCompletedBy: "",
-    reviewedBy: "",
-    investigationTeam: "",
-    submittedBy: "",
-    attachments: [],
-    unsafeWorkplaceConditions: [],
-    unsafeActsByPeople: [],
-    workplaceCultureEncouraged: "",
-    workplaceCultureDescription: "",
-    unsafeActsReported: "",
-    similarIncidentsPrior: "",
-    receivedBy: "",
-  });
+    canvas.style.display = "none";
+    const parent = canvas.parentElement;
+    parent.insertBefore(img, canvas);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    return img;
+  };
 
-    try {
-      const docData = {
-        company_id: formData.employeeId || "",
-        company_name: formData.employeeName || "",
-        date: new Date().toISOString(),
-        injury_data: {
-          activities: [], // Can be mapped from formData if needed
-          category: formData.natureOfInjury || "",
-          events: [
-            {
-              content: formData.incidentDescription || "",
-              heading: formData.incidentDescription || "",
-              images: [], // Will add canvas image if available
-            },
-          ],
-          location: formData.location || "",
-          incidentDateAndTime: formData.dateOfIncident || "",
-          incidentReportedToOHSDateAndTime: formData.dateOfReport || "",
-          organizationalFactors: formData.incidentDescription || "",
-          otherCircumstances: formData.incidentDescription || "",
-          toolsMaterialsEquipment: formData.protectiveEquipment || "",
-          workSiteConditions: formData.unsafeConditions || "",
+  const handleDownloadPDF = () => {
+    const element = document.getElementById("incident-report-form");
+    if (!element) return;
 
-          // Additional fields from the form
-          injuredEmployees: formData.injuredEmployees,
-          injuryType: formData.injuryType,
-          witnesses: formData.witnesses,
-          unsafeWorkplaceConditions: formData.unsafeWorkplaceConditions,
-          unsafeActsByPeople: formData.unsafeActsByPeople,
-          whyUnsafeConditionsExist: formData.whyUnsafeConditionsExist,
-          whyUnsafeActsOccur: formData.whyUnsafeActsOccur,
-          preventionSuggestions: formData.preventionSuggestions,
-          preventionActionsTaken: formData.preventionActionsTaken,
-          attachments: formData.attachments.map((file) => file.name),
-        },
-        metadata: {
-          reportCompletedBy: {
-            name: formData.reportCompletedByname,
-            title: formData.reportCompletedByTitle,
-          },
-          signatures: {
-            writtenBy: {
-              name: formData.reportWrittenByName,
-              title: formData.reportWrittenByTitle,
-              department: formData.reportWrittenByDepartment,
-              date: formData.reportWrittenByDate,
-            },
-            reviewedBy: {
-              name: formData.reportReviewedByName,
-              title: formData.reportReviewedByTitle,
-              department: formData.reportReviewedByDepartment,
-              date: formData.reportReviewedByDate,
-            },
-            investigationTeam: formData.investigationTeamMembers,
-          },
-        },
-      };
+    import("html2pdf.js").then((html2pdf) => {
+      html2pdf
+        .default()
+        .set({
+          margin: 0.5,
+          filename: `Incident_Report_${report?.id || Date.now()}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        })
+        .from(element)
+        .save();
+    });
+  };
 
-      // Get canvas image if available
-      let canvasImage = null;
-      if (canvasRef.current) {
-        canvasImage = canvasRef.current.toDataURL("image/png");
-        docData.injury_data.events[0].images.push(canvasImage);
+  const getCanvasBlob = () => {
+    return new Promise((resolve, reject) => {
+      const canvas = canvasRef.current;
+      const image = imageRef.current;
+
+      if (!canvas || !image) {
+        console.error(
+          "❌ Canvas or image not found. canvas:",
+          canvas,
+          "image:",
+          image
+        );
+        reject("Canvas or image not found");
+        return;
       }
 
-      // Save to Firestore
-      await addDoc(collection(db, "incidentReports"), docData);
+      const tempCanvas = document.createElement("canvas");
+      const ctx = tempCanvas.getContext("2d");
 
-      // Send email if recipient is specified
-      if (formData.returnToEmails) {
-        try {
-          const response = await fetch("/api/send-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
-            },
-            body: JSON.stringify({
-              toEmail: formData.returnToEmails,
-              reportData: docData, // Send the structured data
-              canvasImage: canvasImage,
-            }),
-          });
+      tempCanvas.width = image.clientWidth;
+      tempCanvas.height = image.clientHeight;
 
-          const result = await response.json();
+      ctx.drawImage(image, 0, 0, tempCanvas.width, tempCanvas.height);
+      ctx.drawImage(canvas, 0, 0);
 
-          if (!response.ok) {
-            throw new Error(result.error || "Failed to send email");
-          }
-
-          alert("Report submitted and email sent successfully!");
-        } catch (emailError) {
-          console.error("Email sending failed:", emailError);
-          alert("Report submitted successfully but email failed to send.");
+      tempCanvas.toBlob((blob) => {
+        if (!blob) {
+          console.error("❌ Blob generation failed");
+          reject("Blob generation failed");
+        } else {
+          resolve(blob);
         }
-      } else {
-        alert("Report submitted successfully!");
-      }
+      }, "image/png");
+    });
+  };
 
-      if (onBack) onBack();
+  const uploadAttachments = async () => {
+    if (!formData.attachments || formData.attachments.length === 0) return [];
+
+    const uploadedURLs = [];
+
+    for (const file of formData.attachments) {
+      const fileRef = ref(
+        storage,
+        `incident_attachments/${Date.now()}_${file.name}`
+      );
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      uploadedURLs.push({
+        name: file.name,
+        url: url,
+      });
+    }
+
+    return uploadedURLs;
+  };
+
+  const uploadCanvasImage = async () => {
+    try {
+      console.log("uploadCanvasImage CALLED");
+
+      const blob = await getCanvasBlob().catch((error) => {
+        console.error("Failed to get canvas blob:", error);
+        return null;
+      });
+      if (!blob) return;
+
+      const storageRef = ref(
+        storage,
+        `injure_data/marked_body_parts/${Date.now()}.png`
+      );
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef).catch((error) => {
+        console.error("Failed to get download URL:", error);
+        return null;
+      });
+      if (!downloadURL) return;
+
+      console.log("Download URL:", downloadURL);
+      return downloadURL;
     } catch (error) {
-      console.error("Error saving report:", error);
-      alert("Failed to submit report. Please try again.");
+      console.error("Error in uploadCanvasImage:", error);
     }
   };
 
@@ -230,23 +409,6 @@ export default function IncidentReportForm({
     setFormData({ ...formData, injuredEmployees: updatedEmployees });
   };
 
-  const addInjuredEmployee = () => {
-    setFormData({
-      ...formData,
-      injuredEmployees: [
-        ...formData.injuredEmployees,
-        {
-          name: "",
-          id: "",
-          dateOfBirth: "",
-          jobTitle: "",
-          department: "",
-          employeeType: "",
-          lengthOfTime: "",
-        },
-      ],
-    });
-  };
   const removeInjuredEmployee = (index) => {
     const updatedEmployees = formData.injuredEmployees.filter(
       (_, i) => i !== index
@@ -254,187 +416,244 @@ export default function IncidentReportForm({
     setFormData({ ...formData, injuredEmployees: updatedEmployees });
   };
 
-  const injuryOptions = [
-    "Abrasion, scrapes",
-    "Amputation",
-    "Broken Bone",
-    "Bruise",
-    "Burn (heat)",
-    "Burn (chemical)",
-    "Concussion",
-    "Crushing Injury",
-    "Cut, laceration, puncture",
-    "Hernia",
-    "Illness",
-    "Sprain, strain",
-    "Damage to body system",
-    "Other (describe)",
-  ];
+  const handleClearForm = () => {
+    setFormData(initialFormData);
+  };
 
-  const { currentUser } = useAuth();
+  const validateForm = () => {
+    const requiredFields = [
+      "returnToEmails",
+      "dateOfIncident",
+      "dateOfReport",
+      "incidentDescription",
+      "location",
+      "protectiveEquipment",
+      "whyUnsafeConditionsExist",
+      "whyUnsafeActsOccur",
+      "preventionActionsTaken",
+      "reportWrittenByName",
+      "reportWrittenByTitle",
+      "reportWrittenByDepartment",
+      "reportWrittenByDate",
+      "reportReviewedByName",
+      "reportReviewedByTitle",
+      "reportReviewedByDepartment",
+      "reportReviewedByDate",
+      "reportSubmittedByName",
+      "reportSubmittedBySignature",
+      "reportSubmittedByDate",
+      "reportReceivedByName",
+      "reportReceivedBySignature",
+      "reportReceivedByDate",
+    ];
 
-  const [imageHeight, setImageHeight] = useState(500);
-
-  const workplaceConditions = [
-    "Inadequate guard",
-    "Unguarded hazard",
-    "Safety device is defective",
-    "Tool or equipment defective",
-    "Workstation layout is hazardous",
-    "Unsafe lighting",
-    "Unsafe ventilation",
-    "Lack of needed personal protective equipment",
-    "Lack of appropriate equipment / tools",
-    "Unsafe clothing",
-    "No training or insufficient training",
-  ];
-  const actsByPeople = [
-    "Operating without permissions",
-    "Operating at unsafe speed",
-    "Servicing equipment that has power to it",
-    "Making a safety device inoperative",
-    "Using defective equipment",
-    "Using equipment in an unapproved way",
-    "Unsafe lifting",
-    "Taking an unsafe position or posture",
-    "Distraction, teasing, horseplay",
-    "Failure to wear personal protective equipment",
-    "Failure to use the available equipment / tools",
-  ];
-
-  useEffect(() => {
-    if (imageRef.current) {
-      setImageHeight(imageRef.current.clientHeight);
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === "") {
+        alert(`Please fill out the field: ${field}`);
+        return false;
+      }
     }
-  }, []);
 
-  // ✅ Pre-fill form when report prop changes
-  useEffect(() => {
-    // 1️⃣ Canvas sizing
-    const image = imageRef.current;
-    const canvas = canvasRef.current;
+    if (formData.documentTypes.length === 0) {
+      alert("Please select at least one Document Type.");
+      return false;
+    }
 
-    if (image && canvas) {
-      const setCanvasSize = () => {
-        canvas.width = image.clientWidth;
-        canvas.height = image.clientHeight;
-        console.log("Canvas sized:", canvas.width, canvas.height);
+    if (
+      formData.injuredEmployees.length === 0 ||
+      formData.injuredEmployees.some(
+        (emp) =>
+          !emp.name ||
+          !emp.id ||
+          !emp.dateOfBirth ||
+          !emp.jobTitle ||
+          !emp.department ||
+          !emp.employeeType ||
+          !emp.lengthOfTime
+      )
+    ) {
+      alert("Please complete all Injured Employee fields.");
+      return false;
+    }
+
+    if (formData.injuryOptions?.length === 0) {
+      alert("Please select at least one Nature of Injury.");
+      return false;
+    }
+
+    if (formData.unsafeWorkplaceConditions?.length === 0) {
+      alert("Please select at least one Unsafe Workplace Condition.");
+      return false;
+    }
+
+    if (formData.unsafeActsByPeople?.length === 0) {
+      alert("Please select at least one Unsafe Act by People.");
+      return false;
+    }
+
+    if (formData.preventionSuggestions?.length === 0) {
+      alert("Please select at least one Prevention Suggestion.");
+      return false;
+    }
+
+    if (!["YES", "NO"].includes(formData.workplaceCultureEncouraged)) {
+      alert("Please answer the Workplace Culture Encouragement question.");
+      return false;
+    }
+
+    if (!["YES", "NO"].includes(formData.unsafeActsReported)) {
+      alert("Please answer if unsafe acts were previously reported.");
+      return false;
+    }
+
+    if (!["YES", "NO"].includes(formData.similarIncidentsPrior)) {
+      alert("Please answer if similar incidents occurred before.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare canvas image if drawn on
+      let canvasImage = null;
+      if (hasDrawn && canvasRef.current) {
+        canvasImage = canvasRef.current.toDataURL("image/png");
+      }
+
+      // Upload attachments
+      const uploadedAttachments = await uploadAttachments();
+
+      // Prepare the document data structure
+      const docData = {
+        company_id: formData.employeeId || "",
+        company_name: formData.reported_by || "",
+        date: new Date().toISOString(),
+        injury_data: {
+          activities: [], // Can be mapped from formData if needed
+          category: formData.natureOfInjury || "",
+          events: [
+            {
+              content: formData.incidentDescription || "",
+              heading: formData.incidentDescription || "",
+              images: canvasImage ? [canvasImage] : [],
+            },
+          ],
+          location: formData.location || "",
+          incidentDateAndTime: formData.dateOfIncident || "",
+          incidentReportedToOHSDateAndTime: formData.dateOfReport || "",
+          organizationalFactors: formData.incidentDescription || "",
+          otherCircumstances: formData.incidentDescription || "",
+          toolsMaterialsEquipment: formData.protectiveEquipment || "",
+          workSiteConditions:
+            formData.unsafeWorkplaceConditions.join(", ") || "",
+
+          // Additional fields from the form
+          injuredEmployees: formData.injuredEmployees,
+          injuryType: formData.injuryOptions,
+          witnesses: formData.witnesses,
+          unsafeWorkplaceConditions: formData.unsafeWorkplaceConditions,
+          unsafeActsByPeople: formData.unsafeActsByPeople,
+          whyUnsafeConditionsExist: formData.whyUnsafeConditionsExist,
+          whyUnsafeActsOccur: formData.whyUnsafeActsOccur,
+          preventionSuggestions: formData.preventionSuggestions,
+          preventionActionsTaken: formData.preventionActionsTaken,
+          attachments: uploadedAttachments.map((att) => att.name),
+        },
+        metadata: {
+          reportCompletedBy: {
+            name: formData.reportCompletedByName || "",
+            title: formData.reportCompletedByTitle || "",
+          },
+          signatures: {
+            writtenBy: {
+              name: formData.reportWrittenByName || "",
+              title: formData.reportWrittenByTitle || "",
+              department: formData.reportWrittenByDepartment || "",
+              date: formData.reportWrittenByDate || "",
+            },
+            reviewedBy: {
+              name: formData.reportReviewedByName || "",
+              title: formData.reportReviewedByTitle || "",
+              department: formData.reportReviewedByDepartment || "",
+              date: formData.reportReviewedByDate || "",
+            },
+            investigationTeam: formData.investigationTeamMembers,
+          },
+        },
       };
 
-      if (image.complete) {
-        setCanvasSize();
+      // Save to Firestore
+      let docRef;
+      if (!report?.id) {
+        docRef = await addDoc(collection(db, "incidentReports"), docData);
       } else {
-        image.onload = setCanvasSize;
+        docRef = doc(db, "incidentReports", report.id);
+        await setDoc(docRef, docData, { merge: true });
       }
-    }
-  }, []);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const q = query(
-        collection(db, "users"),
-        where("email", "==", currentUser.email)
-      );
-      const snapshot = await getDocs(q);
-      const userData = snapshot.docs[0]?.data();
-      if (userData) {
-        setFormData((prev) => ({
-          ...prev,
+      // Get the saved document data including the ID
+      const docSnapshot = await getDoc(docRef);
+      const fullDocData = {
+        id: docSnapshot.id,
+        ...docSnapshot.data(),
+      };
 
-          reportCompletedByname: userData.fullName || "",
-          reportCompletedByTitle: userData.title || "",
-        }));
-      }
-    };
+      // Send email if returnToEmails is provided
+      if (formData.returnToEmails) {
+        try {
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
+            },
+            body: JSON.stringify({
+              toEmail: formData.returnToEmails,
+              reportData: fullDocData,
+              canvasImage: canvasImage,
+            }),
+          });
 
-    if (currentUser?.email) fetchUserData();
-  }, []);
+          const result = await response.json();
 
-  useEffect(() => {
-    const fetchIncidentReport = async () => {
-      try {
-        const q = query(
-          collection(db, "incidentReports"),
-          where("company_id", "==", formData.employeeId)
-        );
-        const snapshot = await getDocs(q);
+          if (!response.ok) {
+            throw new Error(result.error || "Failed to send email");
+          }
 
-        if (!snapshot.empty) {
-          const doc = snapshot.docs[0].data();
-          setFormData((prev) => ({
-            ...prev,
-            incidentDescription: doc.injury_data?.events?.[0]?.content || "",
-            protectiveEquipment: doc.injury_data?.toolsMaterialsEquipment || "",
-            location: doc.injury_data?.location || "",
-            dateOfIncident: doc.injury_data?.incidentDateAndTime || "",
-            dateOfReport:
-              doc.injury_data?.incidentReportedToOHSDateAndTime || "",
-            unsafeConditions: doc.injury_data?.workSiteConditions || "",
-            natureOfInjury: doc.injury_data?.category || "",
-          }));
-        } else {
-          console.log("No incident report found for this company_id");
+          alert("Report submitted and email sent successfully!");
+        } catch (emailError) {
+          console.error("Email sending failed:", emailError);
+          alert("Report submitted successfully but email failed to send.");
         }
-      } catch (error) {
-        console.error("Error fetching incident report:", error);
+      } else {
+        alert("Report submitted successfully!");
       }
-    };
 
-    if (formData.employeeId) {
-      fetchIncidentReport();
-    }
-  }, [formData.employeeId]);
+      setHasDrawn(false);
 
-  useEffect(() => {
-    if (report) {
-      setFormData((prev) => ({
-        ...prev,
-        employeeName: report.reported_by || "",
-        location: report.injury_data?.location || "",
-        dateOfIncident: report.injury_data?.incidentDateAndTime
-          ? report.injury_data.incidentDateAndTime.slice(0, 16)
-          : "",
-        dateOfReport: report.injury_data?.incidentReportedToOHSDateAndTime
-          ? report.injury_data.incidentReportedToOHSDateAndTime.slice(0, 16)
-          : "",
-        injuryType: report.injuryOptions?.InjuryType || [],
-        natureOfInjury: report.injury_data?.category || "",
-
-        protectiveEquipment: report.injury_data?.toolsMaterialsEquipment || "",
-        incidentDescription: report?.events?.[0]?.content || "",
-      }));
-    }
-  }, [report]);
-  const [isErasing, setIsErasing] = useState(false);
-
-  const toggleEraser = () => {
-    setIsErasing(!isErasing);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (isErasing) {
-      ctx.clearRect(x - 15, y - 15, 30, 30); // erase a small square
-    } else {
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      // Navigate to Return to Work Plan if provided
+      if (onReturnToWorkPlan) {
+        onReturnToWorkPlan();
+      }
+    } catch (error) {
+      console.error("❌ Failed to save incident report:", error);
+      alert("❌ Submission failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
   return (
-    <div className="min-h-screen p-4 bg-gray-400">
+    <div id="incident-report-form" className="min-h-screen p-4 bg-gray-400">
       <div className="max-w-4xl mx-auto p-8 bg-white border-4 border-black border-double rounded-lg shadow-lg">
         <form onSubmit={handleSubmit}>
           <h1 className="text-xl font-bold mb-4">
@@ -467,29 +686,15 @@ export default function IncidentReportForm({
                   type="checkbox"
                   name={item}
                   checked={formData.documentTypes.includes(item)}
-                  onChange={(e) => {
-                    const { name, checked } = e.target;
-                    if (checked) {
-                      setFormData({
-                        ...formData,
-                        documentTypes: [...formData.documentTypes, name],
-                      });
-                    } else {
-                      setFormData({
-                        ...formData,
-                        documentTypes: formData.documentTypes.filter(
-                          (type) => type !== name
-                        ),
-                      });
-                    }
-                  }}
+                  onChange={(e) => handleCheckboxChange(e, "documentTypes")}
                   className="mr-2"
                 />
                 {item}
               </label>
             ))}
           </div>
-          <div className="mb-4">
+
+          <div className="mb-6 space-y-2">
             <div className="flex flex-wrap">
               <label className="w-1/4 font-medium mb-1">Name</label>
               <label className="w-1/4 font-medium mb-1">Title</label>
@@ -505,9 +710,8 @@ export default function IncidentReportForm({
                 type="text"
                 name="reportCompletedByName"
                 placeholder="Name"
-                value={formData.reportCompletedByname}
+                value={formData.reportCompletedByName}
                 readOnly
-                //className={"border w-1/4 p-2 bg-gray-100 bg-[#edf2f9]"}
                 className={`border bg-[#edf2f9] p-2 ${
                   isPrefilled ? "text-red-600 font-semibold" : ""
                 }`}
@@ -540,7 +744,8 @@ export default function IncidentReportForm({
               />
             </div>
           </div>
-          <div className="mb-4">
+
+          <div className="mb-6 space-y-2">
             <div className="flex space-x-2 mb-1">
               <label className="w-1/3 text-sm font-medium">
                 Reporting Employee
@@ -548,9 +753,9 @@ export default function IncidentReportForm({
             </div>
             <div className="flex space-x-2">
               <input
-                name="employeeName"
+                name="reported_by"
                 placeholder="Employee Name"
-                value={report.reported_by}
+                value={formData.reported_by}
                 onChange={handleChange}
                 className={`border bg-[#edf2f9] p-2 ${
                   isPrefilled ? "text-red-600 font-semibold" : ""
@@ -558,7 +763,10 @@ export default function IncidentReportForm({
               />
             </div>
           </div>
-          <div className="mb-4">
+
+          {/* Rest of your form components remain the same... */}
+          {/* Injured Employees section */}
+          <div className="mb-6 space-y-2">
             <label className="block font-medium mb-1">
               Injured Employee(s):
             </label>
@@ -645,7 +853,6 @@ export default function IncidentReportForm({
                   >
                     +
                   </button>
-                  {/* Remove Button */}
                   {formData.injuredEmployees.length > 1 && (
                     <button
                       type="button"
@@ -659,6 +866,8 @@ export default function IncidentReportForm({
               </div>
             ))}
           </div>
+
+          {/* Nature of Injury section */}
           <h2 className="font-semibold text-lg">
             Nature Of Injury{" "}
             <span className="italic text-sm">(select all that apply)</span>
@@ -678,7 +887,7 @@ export default function IncidentReportForm({
             ))}
           </div>
 
-          {(formData.injuryType || []).includes("Other (describe)") && (
+          {(formData.injuryOptions || []).includes("Other (describe)") && (
             <div className="mt-2">
               <label className="block font-medium">
                 Please describe other injury:
@@ -699,6 +908,7 @@ export default function IncidentReportForm({
             </div>
           )}
 
+          {/* Description of Injury and Body Map section */}
           <div className="flex gap-4 items-start pt-4 items-stretch">
             <div className="flex-1 h-full">
               <h2 className="font-semibold mb-2">Description of Injury</h2>
@@ -710,21 +920,21 @@ export default function IncidentReportForm({
                     incidentDescription: e.target.value,
                   }))
                 }
-                style={{ height: imageHeight }}
+                ref={descriptionRef}
+                style={{ height: `${450}px` }}
                 className="bg-[#edf2f9] w-full border rounded h-40 p-2"
                 placeholder="Describe the injury..."
               />
             </div>
 
-            {/* Right: Image + Canvas */}
             <div className="flex-1 h-full">
               <h2 className="font-semibold mb-2">
                 Part of Body Affected (draw to mark)
               </h2>
-              <div className="relative inline-block  w-full h-full">
+              <div className="relative inline-block w-full h-full">
                 <img
                   ref={imageRef}
-                  src="/video/frontandbackbody.png"
+                  src={imageSrc}
                   alt="Body Map"
                   style={{ width: "100%", height: "auto", zIndex: 1 }}
                   className="w-full object-contain select-none"
@@ -759,6 +969,7 @@ export default function IncidentReportForm({
             </div>
           </div>
 
+          {/* Location and other form sections */}
           <input
             name="location"
             placeholder="Location"
@@ -768,6 +979,8 @@ export default function IncidentReportForm({
               isPrefilled ? "text-red-600 font-semibold" : ""
             }`}
           />
+
+          {/* Workday Incident section */}
           <div className="w-full border rounded p-2 bg-gray-50 mb-4">
             <label className="font-medium block mb-1">
               What part of the employee's workday did the incident occur?
@@ -837,13 +1050,12 @@ export default function IncidentReportForm({
             </div>
           </div>
 
+          {/* Witnesses and Protective Equipment section */}
           <div className="flex gap-4">
-            {/* Witnesses dynamic inputs */}
             <div className="flex-1">
               <label className="block font-medium mb-1">
                 WITNESSES <span className="italic text-sm">if any</span>
               </label>
-
               {formData.witnesses.map((witness, index) => (
                 <div key={index} className="flex space-x-2 mb-2">
                   <input
@@ -869,14 +1081,13 @@ export default function IncidentReportForm({
                           witnesses: updatedWitnesses,
                         });
                       }}
-                      className="bg-red-500 text-white px-2 rounded "
+                      className="bg-red-500 text-white px-2 rounded"
                     >
                       -
                     </button>
                   )}
                 </div>
               ))}
-
               <button
                 type="button"
                 onClick={() =>
@@ -885,13 +1096,12 @@ export default function IncidentReportForm({
                     witnesses: [...formData.witnesses, ""],
                   })
                 }
-                className="bg-green-500 text-white px-2 rounded "
+                className="bg-green-500 text-white px-2 rounded"
               >
                 Add Witness
               </button>
             </div>
 
-            {/* Protective Equipment textarea */}
             <div className="flex-1">
               <label className="block font-medium mb-1">
                 PROTECTIVE EQUIPMENT{" "}
@@ -911,22 +1121,9 @@ export default function IncidentReportForm({
               />
             </div>
           </div>
-          {/*this  has to  go with the second options at top of page<input name="natureOfInjury" placeholder="Nature of Injury" value={formData.natureOfInjury} onChange={handleChange} className={`border w-full p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`} />*/}
-          {/*this is part of nature of injury fifth section <textarea name="descriptionOfInjury" placeholder="Description of Injury" value={formData.descriptionOfInjury} onChange={handleChange} className={`border w-full p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`} />*/}
 
-          {/*<input name="protectiveEquipment" placeholder="Protective Equipment" value={formData.protectiveEquipment} onChange={handleChange} className={`border w-full p-2 ${isPrefilled ? 'text-red-600 font-semibold' : ''}`} />*/}
-          <textarea
-            name="incidentDescription"
-            value={formData.incidentDescription}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                incidentDescription: e.target.value,
-              }))
-            }
-          />
-
-          <div className="mb-4">
+          {/* Attachments section */}
+          <div className="mb-6 space-y-2">
             <label className="block font-medium mb-1">
               ATTACHMENTS (Upload files to be submitted with this report):
             </label>
@@ -940,7 +1137,7 @@ export default function IncidentReportForm({
                   attachments: Array.from(e.target.files),
                 })
               }
-              className="border p-2 w-full"
+              className="w-full border border-gray-300 rounded px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {formData.attachments.length > 0 && (
               <ul className="mt-2 list-disc pl-5 text-sm text-green-700">
@@ -951,10 +1148,10 @@ export default function IncidentReportForm({
             )}
           </div>
 
+          {/* Unsafe Conditions and Acts sections */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Unsafe Workplace Conditions */}
             <div>
-              <h3 className="font-semibold mb-1 ">
+              <h3 className="font-semibold mb-1">
                 UNSAFE WORKPLACE CONDITIONS (select all that apply)
               </h3>
               {workplaceConditions.map((condition, idx) => (
@@ -996,7 +1193,6 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* Unsafe Acts by People */}
             <div>
               <h3 className="font-semibold mb-1">
                 UNSAFE ACTS BY PEOPLE (select all that apply)
@@ -1030,8 +1226,8 @@ export default function IncidentReportForm({
             </div>
           </div>
 
+          {/* Why sections */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Why unsafe conditions exist */}
             <div>
               <label className="block font-medium mb-1">
                 Why did the unsafe conditions exist?
@@ -1049,7 +1245,6 @@ export default function IncidentReportForm({
               />
             </div>
 
-            {/* Why unsafe acts occurred */}
             <div>
               <label className="block font-medium mb-1">
                 Why did the unsafe acts occur?
@@ -1063,12 +1258,13 @@ export default function IncidentReportForm({
                     whyUnsafeActsOccur: e.target.value,
                   })
                 }
-                className="border p-2 bg-[#edf2f9] w-full h-32 "
+                className="border p-2 bg-[#edf2f9] w-full h-32"
               />
             </div>
           </div>
+
+          {/* Workplace Culture questions */}
           <div className="space-y-4 mb-4">
-            {/* Question 1 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
                 Is there a workplace culture, norm, or expectation that may have
@@ -1121,14 +1317,13 @@ export default function IncidentReportForm({
                         workplaceCultureDescription: e.target.value,
                       })
                     }
-                    className="border p-2bg-[#edf2f9] w-full"
+                    className="border p-2 bg-[#edf2f9] w-full"
                     placeholder="Describe..."
                   />
                 </div>
               )}
             </div>
 
-            {/* Question 2 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
                 Were the unsafe acts or conditions reported prior to the
@@ -1168,7 +1363,6 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* Question 3 */}
             <div className="border rounded p-2">
               <label className="font-medium block mb-1">
                 Have there been similar incidents or near misses prior to this
@@ -1208,16 +1402,14 @@ export default function IncidentReportForm({
               </div>
             </div>
           </div>
+
+          {/* Prevention Suggestions and Actions */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Suggestions checkboxes + other description */}
             <div>
               <h3 className="font-semibold mb-2">
                 What changes do you suggest to prevent this incident / near miss
                 from happening again?
-                <span className="italic text-sm  ">
-                  {" "}
-                  (select all that apply)
-                </span>
+                <span className="italic text-sm"> (select all that apply)</span>
               </h3>
               {[
                 "Stop this activity",
@@ -1253,7 +1445,7 @@ export default function IncidentReportForm({
                         preventionSuggestions: updated,
                       });
                     }}
-                    className="mr-2 "
+                    className="mr-2"
                   />
                   {suggestion}
                 </label>
@@ -1276,9 +1468,8 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* Action textarea */}
             <div>
-              <h3 className="font-semibold mb-2 ">
+              <h3 className="font-semibold mb-2">
                 What should be (or has been) done to carry out the suggestion(s)
                 selected above?
               </h3>
@@ -1296,8 +1487,9 @@ export default function IncidentReportForm({
               />
             </div>
           </div>
+
+          {/* Report Written By section */}
           <div className="space-y-6">
-            {/* REPORT WRITTEN BY */}
             <div>
               <h3 className="font-semibold mb-1">REPORT WRITTEN BY</h3>
               <div className="grid grid-cols-2 gap-2 mb-2">
@@ -1334,7 +1526,7 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* REPORT REVIEWED BY */}
+            {/* Report Reviewed By section */}
             <div>
               <h3 className="font-semibold mb-1">REPORT REVIEWED BY</h3>
               <div className="grid grid-cols-2 gap-2 mb-2">
@@ -1371,8 +1563,8 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* INVESTIGATION TEAM MEMBERS */}
-            <div className="mb-4">
+            {/* Investigation Team Members section */}
+            <div className="mb-6 space-y-2">
               <h3 className="font-semibold mb-1">INVESTIGATION TEAM MEMBERS</h3>
               {formData.investigationTeamMembers.map((member, index) => (
                 <div key={index} className="grid grid-cols-2 gap-2 mb-1">
@@ -1400,7 +1592,7 @@ export default function IncidentReportForm({
                       });
                     }}
                     placeholder="Title"
-                    className="border p-2 w-full bg-[#edf2f9] "
+                    className="border p-2 w-full bg-[#edf2f9]"
                   />
                 </div>
               ))}
@@ -1422,7 +1614,7 @@ export default function IncidentReportForm({
               </button>
             </div>
 
-            {/* REPORT SUBMITTED BY */}
+            {/* Report Submitted By section */}
             <div>
               <h3 className="font-semibold mb-1">REPORT SUBMITTED BY</h3>
               <div className="grid grid-cols-3 gap-2">
@@ -1450,7 +1642,7 @@ export default function IncidentReportForm({
               </div>
             </div>
 
-            {/* REPORT RECEIVED BY */}
+            {/* Report Received By section */}
             <div>
               <h3 className="font-semibold mb-1">REPORT RECEIVED BY</h3>
               <div className="grid grid-cols-3 gap-2">
@@ -1478,12 +1670,15 @@ export default function IncidentReportForm({
               </div>
             </div>
           </div>
+
+          {/* Form buttons */}
           <div className="flex space-x-4 pt-4">
             <button
               type="submit"
+              disabled={loading}
               className="bg-blue-500 text-white px-4 py-4 rounded"
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
             {onBack && (
               <button
@@ -1494,15 +1689,21 @@ export default function IncidentReportForm({
                 Back to Table
               </button>
             )}
-            <>
-              <button
-                onClick={onReturnToWorkPlan}
-                className="bg-green-700 text-white px-4 py-4 rounded"
-              >
-                Return to Work Plan
-              </button>
-            </>
+            <button
+              onClick={onReturnToWorkPlan}
+              className="bg-green-700 text-white px-4 py-4 rounded"
+            >
+              Return to Work Plan
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            className="bg-red-600 text-white my-4 px-4 py-4 rounded mb-4"
+          >
+            Download as PDF
+          </button>
         </form>
       </div>
     </div>
