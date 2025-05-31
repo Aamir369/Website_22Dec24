@@ -30,6 +30,10 @@ const InjuryReportsTable = ({ reports }) => {
     setSelectedReport(report);
   };
 
+  reports.map((report) => {
+    console.log(report);
+  });
+
   const handleBackToTable = () => {
     setSelectedReport(null);
   };
