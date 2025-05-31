@@ -1,20 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { auth, db, storage } from "@/lib/firebase/firebaseInit";
+import { db, storage } from "@/lib/firebase/firebaseInit";
 import {
   collection,
   addDoc,
   getDocs,
   query,
   where,
-  updateDoc,
   setDoc,
   getDoc,
   doc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/components/providers/AuthProvider";
-import Link from "next/link";
-import ReturnToWorkPlan from "../component/returntoworkplan";
 import { deleteObject } from "firebase/storage";
 
 const deleteOldCanvasImage = async (imageUrl) => {
@@ -61,6 +58,7 @@ const initialFormData = {
     {
       name: "",
       id: "",
+      email: "",
       dateOfBirth: "",
       jobTitle: "",
       department: "",
@@ -388,6 +386,7 @@ export default function IncidentReportForm({
       console.error("handleCheckboxChange called without valid event!");
       return;
     }
+
     const { value, checked } = e.target;
 
     if (checked) {
@@ -514,6 +513,52 @@ export default function IncidentReportForm({
     return true;
   };
 
+  const sendEmailToInjuredEmployees = async (
+    employees,
+    reportData,
+    canvasImage
+  ) => {
+    try {
+      for (const employee of employees) {
+        if (employee.email) {
+          try {
+            const response = await fetch("/api/send-employee-email", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
+              },
+              body: JSON.stringify({
+                toEmail: employee.email,
+                employeeName: employee.name,
+                reportData: reportData,
+                canvasImage: canvasImage,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              console.error(
+                `Failed to send email to ${employee.email}:`,
+                result.error
+              );
+            } else {
+              console.log(`Email sent successfully to ${employee.email}`);
+            }
+          } catch (emailError) {
+            console.error(
+              `Error sending email to ${employee.email}:`,
+              emailError
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error in sendEmailToInjuredEmployees:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -550,14 +595,22 @@ export default function IncidentReportForm({
           location: formData.location || "",
           incidentDateAndTime: formData.dateOfIncident || "",
           incidentReportedToOHSDateAndTime: formData.dateOfReport || "",
+          injuredEmployees: formData.injuredEmployees.map((emp) => ({
+            name: emp.name,
+            id: emp.id,
+            dateOfBirth: emp.dateOfBirth,
+            jobTitle: emp.jobTitle,
+            department: emp.department,
+            employeeType: emp.employeeType,
+            lengthOfTime: emp.lengthOfTime,
+          })),
+
           organizationalFactors: formData.incidentDescription || "",
           otherCircumstances: formData.incidentDescription || "",
           toolsMaterialsEquipment: formData.protectiveEquipment || "",
           workSiteConditions:
             formData.unsafeWorkplaceConditions.join(", ") || "",
 
-          // Additional fields from the form
-          injuredEmployees: formData.injuredEmployees,
           injuryType: formData.injuryOptions,
           witnesses: formData.witnesses,
           unsafeWorkplaceConditions: formData.unsafeWorkplaceConditions,
@@ -628,15 +681,19 @@ export default function IncidentReportForm({
           if (!response.ok) {
             throw new Error(result.error || "Failed to send email");
           }
-
-          alert("Report submitted and email sent successfully!");
         } catch (emailError) {
           console.error("Email sending failed:", emailError);
-          alert("Report submitted successfully but email failed to send.");
         }
-      } else {
-        alert("Report submitted successfully!");
       }
+
+      await sendEmailToInjuredEmployees(
+        formData.injuredEmployees,
+        fullDocData,
+        canvasImage
+      );
+
+      alert("Report submitted and emails sent successfully!");
+      setHasDrawn(false);
 
       setHasDrawn(false);
 
@@ -651,6 +708,52 @@ export default function IncidentReportForm({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchInjuredEmployeesFromReports = async () => {
+      try {
+        const reportsSnapshot = await getDocs(
+          collection(db, "incidentReports")
+        );
+        const allEmployees = [];
+
+        reportsSnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const employees = data?.injury_data?.injuredEmployees || [];
+
+          employees.forEach((emp) => {
+            if (emp.name) {
+              allEmployees.push({
+                name: emp.name || "",
+                id: emp.id || "",
+                department: emp.department || "",
+                jobTitle: emp.jobTitle || "",
+                employeeType: emp.employeeType || "",
+                lengthOfTime: emp.lengthOfTime || "",
+                dateOfBirth: emp.dateOfBirth || "",
+              });
+            }
+          });
+        });
+
+        // إزالة التكرارات إذا وجدت
+        const uniqueEmployees = Array.from(
+          new Map(
+            allEmployees.map((emp) => [`${emp.name}-${emp.id}`, emp])
+          ).values()
+        );
+
+        setFormData((prev) => ({
+          ...prev,
+          injuredEmployees: uniqueEmployees,
+        }));
+      } catch (error) {
+        console.error("❌ Failed to fetch injured employees:", error);
+      }
+    };
+
+    fetchInjuredEmployeesFromReports();
+  }, []);
 
   return (
     <div id="incident-report-form" className="min-h-screen p-4 bg-gray-400">
@@ -684,7 +787,8 @@ export default function IncidentReportForm({
               >
                 <input
                   type="checkbox"
-                  name={item}
+                  name="documentTypes"
+                  value={item}
                   checked={formData.documentTypes.includes(item)}
                   onChange={(e) => handleCheckboxChange(e, "documentTypes")}
                   className="mr-2"
