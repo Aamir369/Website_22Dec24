@@ -114,6 +114,8 @@ export default function IncidentReportForm({
         );
         const userSnapshot = await getDocs(userQuery);
 
+        const userData = userSnapshot?.docs[0]?.data();
+
         if (!userSnapshot.empty) {
           const userData = userSnapshot.docs[0].data();
           setFormData((prev) => ({
@@ -123,6 +125,16 @@ export default function IncidentReportForm({
             reportWrittenByName: userData.fullName || "",
             reportWrittenByTitle: userData.title || "",
             reportWrittenByDepartment: userData.department || "",
+            reportSubmittedByName: userData.fullName || "",
+            reportSubmittedByDate: new Date().toISOString().slice(0, 10),
+            reportReviewedByName: userData.isManager ? userData.fullName : "",
+            reportReviewedByTitle: userData.isManager ? userData.title : "",
+            reportReviewedByDepartment: userData.isManager
+              ? userData.department
+              : "",
+            reportReviewedByDate: userData.isManager
+              ? new Date().toISOString().slice(0, 10)
+              : "",
           }));
         }
 
@@ -144,6 +156,34 @@ export default function IncidentReportForm({
             protectiveEquipment:
               report.injury_data?.toolsMaterialsEquipment || "",
             incidentDescription: report?.events?.[0]?.content || "",
+            investigationTeamMembers: report.metadata?.signatures
+              ?.investigationTeam || [{ name: "", title: "" }],
+            ...(report.metadata?.signatures?.writtenBy && {
+              reportWrittenByName: report.metadata.signatures.writtenBy.name,
+              reportWrittenByTitle: report.metadata.signatures.writtenBy.title,
+              reportWrittenByDepartment:
+                report.metadata.signatures.writtenBy.department,
+              reportWrittenByDate: report.metadata.signatures.writtenBy.date,
+            }),
+            ...(report.metadata?.signatures?.reviewedBy && {
+              reportReviewedByName: report.metadata.signatures.reviewedBy.name,
+              reportReviewedByTitle:
+                report.metadata.signatures.reviewedBy.title,
+              reportReviewedByDepartment:
+                report.metadata.signatures.reviewedBy.department,
+              reportReviewedByDate: report.metadata.signatures.reviewedBy.date,
+            }),
+            reportSubmittedByName:
+              report.metadata?.signatures?.submittedBy?.name ||
+              userData?.fullName ||
+              "",
+            reportSubmittedByDate:
+              report.metadata?.signatures?.submittedBy?.date ||
+              new Date().toISOString().slice(0, 10),
+            reportReceivedByName:
+              report.metadata?.signatures?.receivedBy?.name || "",
+            reportReceivedByDate:
+              report.metadata?.signatures?.receivedBy?.date || "",
           }));
         }
       } catch (error) {
