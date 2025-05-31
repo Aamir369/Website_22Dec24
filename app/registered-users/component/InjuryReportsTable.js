@@ -7,7 +7,6 @@ import ReturnToWorkPlan from "./returntoworkplan";
 
 const InjuryReportsTable = ({ reports }) => {
   const [selectedData, setSelectedData] = useState([]);
-  const [showForm, setShowForm] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
 
   // Sort data based on the provided criteria
@@ -54,6 +53,10 @@ const InjuryReportsTable = ({ reports }) => {
       />
     );
   }
+
+  const isReportSubmitted = (report) => {
+    return report.submitted;
+  };
 
   return (
     <div className="overflow-x-auto max-h-[600px]">
@@ -189,9 +192,17 @@ const InjuryReportsTable = ({ reports }) => {
               <td className="px-6 py-4 border border-gray-300">
                 <button
                   onClick={() => handleViewReport(report)}
-                  className="text-blue-500 underline"
+                  className={`flex items-center gap-1 ${
+                    isReportSubmitted(report)
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }`}
                 >
-                  View Report
+                  <p className="underline">View Report</p>
+                  <p className="text-lg">
+                    {isReportSubmitted(report) ? "✓" : "X"}
+                  </p>
+                  {console.log(report)}
                 </button>
               </td>
               <td className="px-6 py-4  whitespace-normal break-words border border-gray-300">

@@ -688,6 +688,7 @@ export default function IncidentReportForm({
           attachments: uploadedAttachments.map((att) => att.name),
         },
         metadata: {
+          submitted: true,
           reportCompletedBy: {
             name: formData.reportCompletedByName || "",
             title: formData.reportCompletedByTitle || "",
@@ -717,6 +718,16 @@ export default function IncidentReportForm({
       } else {
         docRef = doc(db, "incidentReports", report.id);
         await setDoc(docRef, docData, { merge: true });
+      }
+
+      if (report?.id) {
+        await setDoc(
+          doc(db, "INJURY_REPORTS", report.id),
+          {
+            submitted: true,
+          },
+          { merge: true }
+        );
       }
 
       // Get the saved document data including the ID
@@ -802,7 +813,6 @@ export default function IncidentReportForm({
           });
         });
 
-        // إزالة التكرارات إذا وجدت
         const uniqueEmployees = Array.from(
           new Map(
             allEmployees.map((emp) => [`${emp.name}-${emp.id}`, emp])
