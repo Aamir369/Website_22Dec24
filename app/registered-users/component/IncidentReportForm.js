@@ -320,18 +320,44 @@ export default function IncidentReportForm({
     const element = document.getElementById("incident-report-form");
     if (!element) return;
 
+    const sensitiveElements = element.querySelectorAll(
+      ".form-section, .employee-section, .signature-section"
+    );
+    sensitiveElements.forEach((el) => {
+      el.classList.add("avoid-page-break");
+    });
+
     import("html2pdf.js").then((html2pdf) => {
       html2pdf
         .default()
         .set({
-          margin: 0.5,
+          margin: [0.5, 0.5, 0.5, 0.5],
           filename: `Incident_Report_${report?.id || Date.now()}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: true,
+            letterRendering: true,
+          },
+          jsPDF: {
+            unit: "in",
+            format: "letter",
+            orientation: "portrait",
+            hotfixes: ["px_scaling"],
+          },
+          pagebreak: {
+            mode: ["avoid-all", "css", "legacy"],
+          },
         })
         .from(element)
-        .save();
+        .save()
+        .then(() => {
+          sensitiveElements.forEach((el) => {
+            el.classList.remove("avoid-page-break");
+          });
+        });
     });
   };
 
